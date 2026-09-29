@@ -541,6 +541,58 @@
   .set-row:last-child{
     margin-bottom:0;
   }
+  .ex-suggest{
+    margin-top:9px;
+    padding:9px 11px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-left:2px solid var(--amber);
+    border-radius:6px;
+  }
+  .ex-suggest-row{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .ex-suggest-main{
+    font-family:var(--font-mono);
+    font-size:13.5px;
+    color:var(--amber);
+  }
+  .ex-suggest-apply{
+    flex:0 0 auto;
+    background:var(--amber-dim);
+    color:var(--amber);
+    border:1px solid var(--amber);
+    border-radius:5px;
+    font-family:var(--font-head);
+    font-size:11px;
+    padding:4px 10px;
+    cursor:pointer;
+  }
+  .ex-suggest-apply:active{
+    background:var(--amber);
+    color:#2A1C05;
+  }
+  .ex-suggest-why{
+    font-size:11px;
+    color:var(--ink-dim);
+    margin-top:4px;
+    line-height:1.4;
+  }
+  .ex-last{
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    color:var(--ink-faint);
+    margin-top:5px;
+  }
+  .ex-suggest-empty{
+    border-left-color:var(--line);
+    font-size:11px;
+    color:var(--ink-faint);
+    line-height:1.4;
+  }
   .set-num{
     font-size:11.5px;
     color:var(--ink-dim);
@@ -892,12 +944,12 @@ function suggestNextTarget(ex, sets){
   if(max !== null && avgReps >= max){
     const newWeight = Math.round((weightNum + ex.inc) * 10) / 10;
     const rangeLabel = (min === max) ? String(max) : (min + "-" + max);
-    return "🎯 Próximo treino: " + newWeight + "kg × " + rangeLabel + (min === max ? " (bateu a meta em média, hora de subir a carga)" : " (bateu o topo da faixa em média, hora de subir a carga)");
+    return "🎯 Próximo treino: " + fmtNum(newWeight) + " kg × " + rangeLabel + (min === max ? " (bateu a meta em média, hora de subir a carga)" : " (bateu o topo da faixa em média, hora de subir a carga)");
   }
 
   const nextRepsTarget = max !== null ? Math.min(Math.round(avgReps) + 1, max) : Math.round(avgReps) + 1;
   const nextLabel = (max !== null && (min === max || nextRepsTarget === max)) ? String(nextRepsTarget) : (nextRepsTarget + (max !== null ? ("-"+max) : ""));
-  return "🎯 Próximo treino: mesma carga (" + weightNum + "kg), tente " + nextLabel + " reps em cada série";
+  return "🎯 Próximo treino: mesma carga (" + fmtNum(weightNum) + " kg), tente " + nextLabel + " reps em cada série";
 }
 
 let currentWeek = 1;
@@ -1175,6 +1227,7 @@ const GYM_PLAN = [
 
 let GYM_WEIGHTS = {};
 let GYM_SESSIONS = [];
+let GYM_HISTORY = {};
 let openGymCard = null;
 let GYM_NEXT_ID = "A";
 const WORKOUT_ORDER_IDS = ["A","B","C","D"];
@@ -1187,6 +1240,8 @@ async function loadGym(){
     if(s) GYM_SESSIONS = JSON.parse(s);
     const n = localStorage.getItem("gym_next_id_v1");
     if(n && WORKOUT_ORDER_IDS.includes(n)) GYM_NEXT_ID = n;
+    const h = localStorage.getItem("gym_history_v1");
+    if(h) GYM_HISTORY = JSON.parse(h);
   }catch(e){ /* ignore, start fresh */ }
 }
 
@@ -1200,6 +1255,10 @@ async function saveGymSessions(){
 
 async function saveGymRotation(){
   try{ localStorage.setItem("gym_next_id_v1", GYM_NEXT_ID); }catch(e){}
+}
+
+async function saveGymHistory(){
+  try{ localStorage.setItem("gym_history_v1", JSON.stringify(GYM_HISTORY)); }catch(e){}
 }
 
 function getExEntry(key, setsCount){
@@ -1216,6 +1275,117 @@ function getExEntry(key, setsCount){
   if(typeof raw.done !== "boolean") raw.done = false;
   GYM_WEIGHTS[key] = raw;
   return raw;
+}
+
+function parseW(str){
+  const n = parseFloat(String(str||"").replace(",", "."));
+  return isNaN(n) ? null : n;
+}
+
+function fmtNum(n){
+  return String(Math.round(n*10)/10).replace(".", ",");
+}
+
+// Reduces one logged session of an exercise to the numbers the suggestion needs.
+function sessionStats(sets){
+  const valid = (sets||[]).filter(x => x && x.reps !== "" && x.reps !== undefined && !isNaN(parseInt(x.reps,10)));
+  if(!valid.length) return null;
+  const reps = valid.map(x => parseInt(x.reps,10));
+  const weights = valid.map(x => parseW(x.weight)).filter(w => w !== null);
+  return {
+    reps: reps,
+    avgReps: reps.reduce((a,b)=>a+b,0) / reps.length,
+    weight: weights.length ? Math.max.apply(null, weights) : null
+  };
+}
+
+function exHistory(key){
+  return (GYM_HISTORY[key] || [])
+    .map(h => ({ date: h.date, st: sessionStats(h.sets) }))
+    .filter(h => h.st);
+}
+
+// Suggests the load for today from what was actually logged in previous sessions.
+function suggestFromHistory(ex){
+  const t = parseTarget(ex.target);
+  const entries = exHistory(ex.key);
+  if(!entries.length) return { hasHistory:false, isTime:t.isTime };
+
+  const last = entries[entries.length-1];
+  const out = { hasHistory:true, isTime:t.isTime, last:last, sessions:entries.length };
+
+  if(t.isTime){
+    out.label = Math.round(last.st.avgReps + 5) + "s por série";
+    out.why = "no último treino você segurou " + fmtNum(last.st.avgReps) + "s em média";
+    return out;
+  }
+
+  const min = t.min, max = t.max;
+  const repsLabel = (min === max || max === null) ? String(min === null ? "" : min) : (min + "-" + max);
+  const w = last.st.weight;
+
+  if(w === null || ex.inc === null){
+    if(max !== null && last.st.avgReps >= max){
+      out.label = "variação mais difícil × " + min + " reps";
+      out.why = "você fechou " + fmtNum(last.st.avgReps) + " reps em média — hora de dificultar a variação";
+    } else {
+      out.label = repsLabel + " reps";
+      out.why = "exercício sem carga: progrida pelas reps (última média " + fmtNum(last.st.avgReps) + ")";
+    }
+    return out;
+  }
+
+  let stuck = false;
+  if(entries.length >= 3){
+    const l3 = entries.slice(-3);
+    const sameWeight = l3.every(e => e.st.weight !== null && Math.abs(e.st.weight - w) < 0.01);
+    stuck = sameWeight && (l3[2].st.avgReps <= l3[0].st.avgReps + 0.5);
+  }
+
+  const prev = entries.length >= 2 ? entries[entries.length-2] : null;
+  const repeatedMiss = prev && prev.st.weight !== null && Math.abs(prev.st.weight - w) < 0.01 && min !== null && prev.st.avgReps < min;
+
+  if(max !== null && last.st.avgReps >= max){
+    out.weight = Math.round((w + ex.inc) * 10) / 10;
+    out.why = "você fechou " + fmtNum(last.st.avgReps) + " reps em média com " + fmtNum(w) + " kg — sobe " + fmtNum(ex.inc) + " kg";
+  } else if(min !== null && last.st.avgReps < min && repeatedMiss){
+    out.weight = Math.max(0, Math.round((w - ex.inc) * 10) / 10);
+    out.why = "dois treinos seguidos abaixo de " + min + " reps com " + fmtNum(w) + " kg — alivia " + fmtNum(ex.inc) + " kg para voltar à faixa";
+  } else if(min !== null && last.st.avgReps < min){
+    out.weight = w;
+    out.why = "ficou em " + fmtNum(last.st.avgReps) + " reps, abaixo da faixa — repita " + fmtNum(w) + " kg buscando " + min;
+  } else if(stuck){
+    out.weight = Math.round((w + ex.inc) * 10) / 10;
+    out.why = "três treinos parados em " + fmtNum(w) + " kg sem ganhar reps — tente subir " + fmtNum(ex.inc) + " kg";
+  } else {
+    out.weight = w;
+    out.why = "mantenha " + fmtNum(w) + " kg e some 1 rep por série (última média " + fmtNum(last.st.avgReps) + ")";
+  }
+
+  out.label = fmtNum(out.weight) + " kg × " + repsLabel;
+  return out;
+}
+
+function suggestBlockHTML(ex){
+  const sug = suggestFromHistory(ex);
+  if(!sug.hasHistory){
+    return `<div class="ex-suggest ex-suggest-empty">Sem histórico ainda — registre o treino de hoje e na próxima vez eu sugiro a carga aqui.</div>`;
+  }
+  const applyBtn = (sug.weight !== undefined && sug.weight !== null)
+    ? `<button type="button" class="ex-suggest-apply" data-role="applysuggest" data-key="${ex.key}" data-weight="${sug.weight}">usar</button>`
+    : "";
+  const when = new Date(sug.last.date).toLocaleDateString("pt-BR", {day:"2-digit", month:"2-digit"});
+  const lastWeight = sug.last.st.weight !== null ? (fmtNum(sug.last.st.weight) + " kg · ") : "";
+  const unit = sug.isTime ? "s" : "reps";
+  return `
+      <div class="ex-suggest">
+        <div class="ex-suggest-row">
+          <span class="ex-suggest-main">Hoje: ${sug.label}</span>
+          ${applyBtn}
+        </div>
+        <div class="ex-suggest-why">${sug.why}</div>
+        <div class="ex-last">Última vez ${when} · ${lastWeight}${sug.last.st.reps.join(" / ")} ${unit}</div>
+      </div>`;
 }
 
 function getOrderedWorkouts(){
@@ -1295,6 +1465,7 @@ function exerciseRowHTML(ex){
           Concluído
         </label>
       </div>
+      ${suggestBlockHTML(ex)}
       <div class="sets-table">
         <div class="sets-header"><span></span><span>Peso (kg)</span><span>${valLabel}</span></div>
         ${setsRows}
@@ -1362,6 +1533,22 @@ function renderGymList(){
         const row = inp.closest(".exercise-row");
         const hint = row ? row.querySelector('[data-role="nexttarget"]') : null;
         if(hint) hint.textContent = suggestNextTarget(ex, entry.sets);
+      });
+    });
+
+    card.querySelectorAll('[data-role="applysuggest"]').forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const key = btn.getAttribute("data-key");
+        const ex = workout.exercises.find(e => e.key === key);
+        if(!ex) return;
+        const value = fmtNum(parseFloat(btn.getAttribute("data-weight")));
+        const entry = getExEntry(key, parseSetsCount(ex.target));
+        entry.sets.forEach(st => { st.weight = value; });
+        saveGymWeights();
+        const row = btn.closest(".exercise-row");
+        if(row){
+          row.querySelectorAll('input[data-role="setweight"]').forEach(inp=>{ inp.value = value; });
+        }
       });
     });
 
@@ -1476,6 +1663,23 @@ function renderGymList(){
 
         workout.exercises.forEach(ex=>{
           const entry = getExEntry(ex.key, parseSetsCount(ex.target));
+          if(sessionStats(entry.sets)){
+            const hist = GYM_HISTORY[ex.key] || (GYM_HISTORY[ex.key] = []);
+            hist.push({
+              date: new Date().toISOString(),
+              sets: entry.sets.map(st => ({ weight: st.weight || "", reps: st.reps || "" }))
+            });
+            if(hist.length > 12) hist.splice(0, hist.length - 12);
+          }
+        });
+        saveGymHistory();
+
+        // with today filed away, leave the next session already loaded with the suggestion
+        workout.exercises.forEach(ex=>{
+          const entry = getExEntry(ex.key, parseSetsCount(ex.target));
+          const sug = suggestFromHistory(ex);
+          const weight = (sug.weight !== undefined && sug.weight !== null) ? fmtNum(sug.weight) : "";
+          entry.sets = entry.sets.map(st => ({ weight: weight || st.weight || "", reps: "" }));
           entry.done = false;
         });
         saveGymWeights();
