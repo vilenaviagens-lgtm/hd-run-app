@@ -587,6 +587,17 @@
     color:var(--ink-faint);
     margin-top:5px;
   }
+  .app-version{
+    display:block;
+    margin:30px auto 0;
+    padding:6px 10px;
+    background:none;
+    border:none;
+    color:var(--ink-faint);
+    font-family:var(--font-mono);
+    font-size:10.5px;
+    cursor:pointer;
+  }
   .ex-suggest-empty{
     border-left-color:var(--line);
     font-size:11px;
@@ -832,10 +843,55 @@
       <div id="gymHistory"></div>
     </div>
   </div>
+  <button type="button" class="app-version" id="appVersion"></button>
 </div>
 
 
 <script>
+const APP_VERSION = "2026-09-29.2";
+
+// The whole app is one HTML file, so a phone that cached it keeps showing an old
+// build forever. Compare the published version with this one and switch to it.
+async function checkForUpdate(force){
+  const badge = document.getElementById("appVersion");
+  try{
+    if(force && badge) badge.textContent = "procurando atualização…";
+    const res = await fetch(location.pathname + "?check=" + Date.now(), {cache:"no-store"});
+    if(!res.ok) throw new Error("http " + res.status);
+    const published = (await res.text()).match(/APP_VERSION = "([^"]+)"/);
+    if(!published) throw new Error("versão não encontrada");
+
+    if(published[1] === APP_VERSION){
+      try{ sessionStorage.removeItem("app_update_to"); }catch(e){}
+      if(badge) badge.textContent = "versão " + APP_VERSION + (force ? " · já está atualizado" : "");
+      return;
+    }
+
+    // only one automatic swap per session, so a stubborn cache can't loop the page
+    let tried = null;
+    try{ tried = sessionStorage.getItem("app_update_to"); }catch(e){}
+    if(tried === published[1] && !force){
+      if(badge) badge.textContent = "versão " + APP_VERSION + " · toque para atualizar";
+      return;
+    }
+    try{ sessionStorage.setItem("app_update_to", published[1]); }catch(e){}
+    location.replace(location.pathname + "?v=" + encodeURIComponent(published[1]));
+  }catch(e){
+    if(badge) badge.textContent = "versão " + APP_VERSION + " · toque para atualizar";
+  }
+}
+
+function setupVersionBadge(){
+  const badge = document.getElementById("appVersion");
+  if(!badge) return;
+  badge.textContent = "versão " + APP_VERSION + " · toque para atualizar";
+  badge.addEventListener("click", ()=> checkForUpdate(true));
+  document.addEventListener("visibilitychange", ()=>{
+    if(!document.hidden) checkForUpdate(false);
+  });
+  checkForUpdate(false);
+}
+
 const TYPE_STYLE = {
   "Intervalado": {color:"#E2703F", bg:"#3A2416", fg:"#E2703F"},
   "Limiar": {color:"#D19A4A", bg:"#3A2E16", fg:"#D19A4A"},
@@ -1734,6 +1790,7 @@ function setupTabs(){
   openGymCard = GYM_NEXT_ID;
   renderGymAll();
   setupTabs();
+  setupVersionBadge();
 })();
 </script>
 </body>
