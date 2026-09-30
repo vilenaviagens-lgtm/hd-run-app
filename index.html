@@ -587,6 +587,16 @@
     color:var(--ink-faint);
     margin-top:5px;
   }
+  .run-clash{
+    margin:0 0 12px;
+    padding:10px 12px;
+    background:rgba(226,112,63,0.10);
+    border:1px solid var(--track-light);
+    border-radius:6px;
+    font-size:11.5px;
+    color:var(--track-light);
+    line-height:1.45;
+  }
   .app-version{
     display:block;
     margin:30px auto 0;
@@ -836,7 +846,7 @@
         <span id="gymLastSession"></span>
       </div>
     </div>
-    <p class="week-heading">Divisão ABCD · hipertrofia · 4x na semana</p>
+    <p class="week-heading">Superior / inferior alternado · hipertrofia · 4x na semana</p>
     <div id="gymList"></div>
     <div class="stats">
       <h2>Histórico recente</h2>
@@ -848,7 +858,7 @@
 
 
 <script>
-const APP_VERSION = "2026-09-29.2";
+const APP_VERSION = "2026-09-30.1";
 
 // The whole app is one HTML file, so a phone that cached it keeps showing an old
 // build forever. Compare the published version with this one and switch to it.
@@ -1128,11 +1138,14 @@ function renderSessions(){
     const checkinState = Object.assign({}, entry.checkin);
 
     function commit(){
+      const wasDone = (LOG[s.id] || {}).done;
       LOG[s.id] = {
         done: doneInput.checked,
         distance: distInput.value,
         time: timeInput.value,
-        checkin: checkinState
+        checkin: checkinState,
+        // kept so the gym tab knows how fresh the last run is
+        doneAt: doneInput.checked ? ((wasDone && LOG[s.id].doneAt) || new Date().toISOString()) : null
       };
       const p = paceFromTime(parseFloat(distInput.value), timeInput.value);
       paceInput.value = p ? p.label : "—";
@@ -1240,44 +1253,46 @@ function renderAll(){
 
 /* ---------- ACADEMIA ---------- */
 const GYM_STYLE = {
-  "Superior · Push": {color:"#E2703F", bg:"#3A2416", fg:"#E2703F"},
+  "Superior · Peito e ombro": {color:"#E2703F", bg:"#3A2416", fg:"#E2703F"},
   "Inferior · Quadríceps": {color:"#D19A4A", bg:"#3A2E16", fg:"#D19A4A"},
-  "Superior · Pull": {color:"#7C9A5A", bg:"#293620", fg:"#9FBF7D"},
-  "Inferior · Posterior/Glúteos": {color:"#5B8FA8", bg:"#1C2E36", fg:"#7FB4CC"}
+  "Superior · Costas e ombro": {color:"#7C9A5A", bg:"#293620", fg:"#9FBF7D"},
+  "Inferior · Posterior": {color:"#5B8FA8", bg:"#1C2E36", fg:"#7FB4CC"}
 };
 
 const GYM_PLAN = [
-  {id:"A", name:"Treino A", focus:"Superior · Push", exercises:[
-    {key:"a1", name:"Supino reto (barra/halteres)", target:"4x8-10", how:"Deite no banco com os pés apoiados no chão e pegada pouco mais aberta que os ombros. Desça a barra/halteres até o peito de forma controlada e empurre para cima sem travar os cotovelos no topo.", rest:90, inc:2.5},
-    {key:"a2", name:"Desenvolvimento com halteres", target:"3x10-12", how:"Sentado ou em pé, halteres na altura dos ombros com as palmas para frente. Empurre para cima até quase estender os braços, sem arquear demais a lombar.", rest:90, inc:2},
-    {key:"a3", name:"Crucifixo peck deck", target:"3x12-15", how:"Sente-se com as costas apoiadas. Aproxime os braços à frente do peito de forma controlada, sem bater os apoios um no outro.", rest:60, inc:2.5},
-    {key:"a4", name:"Elevação lateral", target:"3x12-15", how:"Halteres ao lado do corpo, cotovelos com leve flexão. Eleve até a altura dos ombros sem usar impulso do tronco, e desça devagar.", rest:60, inc:1},
-    {key:"a5", name:"Tríceps corda", target:"3x12-15", how:"Cotovelos fixos junto ao corpo. Estenda os braços afastando as pontas da corda no final do movimento, sem mover o ombro.", rest:60, inc:1},
-    {key:"a6", name:"Tríceps testa", target:"3x12", how:"Deitado, halteres ou barra acima da testa com os braços estendidos. Flexione os cotovelos abaixando o peso perto da testa e estenda de volta, mantendo os cotovelos parados.", rest:60, inc:1}
+  {id:"A", name:"Treino A", focus:"Superior · Peito e ombro", exercises:[
+    {key:"a1", name:"Supino reto (barra/halteres)", target:"4x8-10", how:"Deite no banco com os pés firmes no chão e as escápulas encaixadas. Desça a barra até a linha do mamilo controlando, e suba sem travar os cotovelos.", rest:90, inc:2.5},
+    {key:"a7", name:"Supino inclinado com halteres", target:"3x8-10", how:"Banco a 30-45°. Halteres na linha do peito alto, cotovelos a cerca de 45° do tronco. Desça até sentir alongar o peitoral e suba juntando os halteres sem bater um no outro.", rest:90, inc:2},
+    {key:"c1", name:"Remada curvada", target:"4x8-10", how:"Tronco inclinado a cerca de 45°, coluna neutra e joelhos levemente flexionados. Puxe a barra em direção ao umbigo levando os cotovelos para trás, e desça controlando.", rest:90, inc:2.5},
+    {key:"c4", name:"Puxada frontal (pulley)", target:"3x10-12", how:"Pegada um pouco mais aberta que os ombros. Puxe a barra até a altura do queixo levando o peito para frente, e controle a subida até estender os braços.", rest:90, inc:2.5},
+    {key:"a4", name:"Elevação lateral", target:"4x12-15", how:"Halteres ao lado do corpo, cotovelos levemente flexionados. Suba até a altura dos ombros conduzindo pelos cotovelos, sem jogar o tronco, e desça devagar.", rest:60, inc:1},
+    {key:"a5", name:"Tríceps corda", target:"3x12-15", how:"Cotovelos colados ao tronco e parados. Estenda os braços abrindo a corda no final do movimento, e volte controlando sem deixar o cotovelo abrir para frente.", rest:60, inc:1},
+    {key:"c6", name:"Rosca direta", target:"3x10-12", how:"Cotovelos fixos ao lado do corpo. Suba a barra até a altura do peito sem balançar o tronco, e desça controlando até quase estender.", rest:60, inc:1}
   ]},
   {id:"B", name:"Treino B", focus:"Inferior · Quadríceps", exercises:[
-    {key:"b1", name:"Agachamento livre", target:"4x8-10", how:"Pés na largura dos ombros. Desça flexionando quadril e joelho como se fosse sentar, peito erguido e joelhos alinhados com os pés, até coxas paralelas ao chão.", rest:120, inc:5},
-    {key:"b2", name:"Leg press", target:"3x10-12", how:"Pés na plataforma na largura dos ombros. Desça até formar cerca de 90° no joelho e empurre de volta sem travar totalmente.", rest:90, inc:10},
+    {key:"b1", name:"Agachamento livre", target:"4x8-10", how:"Barra apoiada no trapézio, pés na largura dos ombros e pontas levemente para fora. Desça até a coxa ficar paralela ao chão mantendo o peito aberto, e suba empurrando o chão.", rest:120, inc:2.5},
+    {key:"b2", name:"Leg press", target:"3x10-12", how:"Pés na plataforma na largura dos ombros. Desça até formar cerca de 90° no joelho e empurre de volta sem travar totalmente.", rest:90, inc:5},
     {key:"b3", name:"Cadeira extensora", target:"3x12-15", how:"Ajuste o encosto para os joelhos ficarem alinhados ao eixo do equipamento. Estenda controladamente e evite jogar o corpo para trás.", rest:60, inc:2.5},
     {key:"b4", name:"Mesa flexora (deitada)", target:"3x12-15", how:"Deitado de bruços no equipamento, com o rolo apoiado logo acima dos calcanhares. Flexione os joelhos trazendo o calcanhar em direção ao glúteo, e controle a volta sem deixar o quadril subir do banco.", rest:60, inc:2.5},
-    {key:"b5", name:"Panturrilha em pé", target:"4x15-20", how:"Suba na ponta dos pés o máximo possível, pausa breve no topo, e desça controlando bem o alongamento.", rest:45, inc:5},
+    {key:"b5", name:"Panturrilha em pé", target:"4x15-20", how:"Suba na ponta dos pés o máximo possível, pausa breve no topo, e desça controlando bem o alongamento.", rest:45, inc:2.5},
     {key:"b6", name:"Prancha", target:"3x40s", how:"Apoio em antebraços e pontas dos pés, corpo alinhado da cabeça aos calcanhares. Contraia o abdômen e evite deixar o quadril cair ou subir demais.", rest:45, inc:null}
   ]},
-  {id:"C", name:"Treino C", focus:"Superior · Pull", exercises:[
-    {key:"c1", name:"Remada curvada", target:"4x8-10", how:"Tronco inclinado à frente, costas retas. Puxe a barra em direção ao abdômen levando os cotovelos para trás, próximos ao corpo.", rest:90, inc:2.5},
-    {key:"c2", name:"Puxada supinada", target:"3x10-12", how:"Pegada invertida (palmas voltadas para você). Puxe até o peito/queixo focando em levar os cotovelos para baixo, e controle a subida.", rest:90, inc:2.5},
-    {key:"c3", name:"Crucifixo invertido (halteres/peck deck)", target:"3x12-15", how:"Tronco inclinado à frente (ou sentado no peck deck invertido). Com leve flexão nos cotovelos, afaste os braços para trás e para os lados, contraindo o deltoide posterior, e controle a volta.", rest:60, inc:1},
-    {key:"c4", name:"Puxada frontal (pulley)", target:"4x10-12", how:"Pegada aberta na barra, tronco levemente inclinado para trás. Puxe até a parte superior do peito levando os cotovelos para baixo e controle a subida de volta.", rest:90, inc:2.5},
-    {key:"c5", name:"Rosca martelo", target:"3x12", how:"Pegada neutra, palmas viradas uma para a outra. Flexione mantendo o cotovelo fixo junto ao corpo.", rest:60, inc:1},
-    {key:"c6", name:"Rosca direta", target:"3x10-12", how:"Cotovelos junto ao corpo. Flexione até a altura do ombro sem balançar o tronco, e controle a descida.", rest:60, inc:1}
+  {id:"C", name:"Treino C", focus:"Superior · Costas e ombro", exercises:[
+    {key:"c2", name:"Puxada supinada", target:"4x8-10", how:"Pegada supinada na largura dos ombros. Puxe a barra até a parte alta do peito levando os cotovelos para baixo e para trás, e suba controlando.", rest:90, inc:2.5},
+    {key:"c7", name:"Remada baixa (triângulo)", target:"3x10-12", how:"Sentado, coluna neutra e joelhos levemente flexionados. Puxe o triângulo até a barriga aproximando as escápulas, sem jogar o tronco para trás, e volte alongando as costas.", rest:90, inc:2.5},
+    {key:"a2", name:"Desenvolvimento com halteres", target:"4x8-10", how:"Sentado com o encosto quase vertical. Suba os halteres até quase estender os cotovelos, sem travar, e desça até a altura das orelhas.", rest:90, inc:2},
+    {key:"a3", name:"Crucifixo peck deck", target:"3x12-15", how:"Costas apoiadas e cotovelos na altura do peito. Feche os braços juntando as manoplas à frente, segure meio segundo, e volte controlando o alongamento.", rest:60, inc:2.5},
+    {key:"c3", name:"Crucifixo invertido (halteres/peck deck)", target:"3x12-15", how:"Tronco inclinado à frente ou no peck deck invertido. Abra os braços conduzindo pelos cotovelos, apertando a parte de trás dos ombros, e volte devagar.", rest:60, inc:1},
+    {key:"a6", name:"Tríceps testa", target:"3x10-12", how:"Deitado, cotovelos apontados para o teto e parados. Desça a barra até próximo da testa e estenda os braços sem abrir os cotovelos.", rest:60, inc:1},
+    {key:"c5", name:"Rosca martelo", target:"3x12", how:"Halteres com pegada neutra, polegares para cima. Suba sem girar o punho, cotovelos fixos ao lado do corpo, e desça controlando.", rest:60, inc:1}
   ]},
-  {id:"D", name:"Treino D", focus:"Inferior · Posterior/Glúteos", exercises:[
-    {key:"d1", name:"Levantamento terra romeno", target:"4x8-10", how:"Pernas quase estendidas, barra próxima ao corpo. Desça levando o quadril para trás até sentir alongar o posterior de coxa, e suba contraindo os glúteos.", rest:120, inc:5},
-    {key:"d2", name:"Afundo búlgaro", target:"3x10 (cada perna)", how:"Pé de trás apoiado em um banco. Desça o joelho da frente até quase tocar o chão, mantendo o tronco ereto, e suba pela perna da frente.", rest:90, inc:2},
-    {key:"d3", name:"Cadeira flexora", target:"3x12-15", how:"Deitado ou sentado no equipamento. Flexione os joelhos trazendo o calcanhar em direção ao glúteo, controlando a volta.", rest:60, inc:2.5},
-    {key:"d4", name:"Hip thrust", target:"4x10-12", how:"Costas apoiadas em um banco, barra sobre o quadril. Empurre o quadril para cima contraindo os glúteos no topo, e desça controladamente.", rest:90, inc:5},
-    {key:"d5", name:"Panturrilha sentado", target:"4x15-20", how:"Sentado, com peso apoiado sobre os joelhos. Suba na ponta dos pés controladamente e desça alongando bem.", rest:45, inc:5},
-    {key:"d6", name:"Abdominal", target:"3x15", how:"Deitado, joelhos flexionados e pés apoiados. Contraia o abdômen elevando o tronco, sem puxar o pescoço com as mãos.", rest:45, inc:null}
+  {id:"D", name:"Treino D", focus:"Inferior · Posterior", exercises:[
+    {key:"d1", name:"Levantamento terra romeno", target:"4x8-10", how:"Barra próxima às pernas, joelhos levemente flexionados. Empurre o quadril para trás descendo a barra rente às coxas até sentir alongar o posterior, e suba contraindo glúteos.", rest:120, inc:2.5},
+    {key:"d2", name:"Afundo búlgaro", target:"3x10 (cada perna)", how:"Pé de trás apoiado no banco, tronco levemente inclinado à frente. Desça até o joelho da frente formar 90° e suba empurrando com o calcanhar da perna da frente.", rest:90, inc:2},
+    {key:"d3", name:"Cadeira flexora", target:"3x12-15", how:"Sentado com o rolo logo acima dos calcanhares. Flexione os joelhos o máximo possível e controle a volta sem deixar o peso bater.", rest:60, inc:2.5},
+    {key:"d5", name:"Panturrilha sentado", target:"4x15-20", how:"Joelhos a 90° com o apoio sobre as coxas. Suba na ponta dos pés, pausa no topo, e desça alongando bem.", rest:45, inc:2.5},
+    {key:"d7", name:"Elevação lateral (extra de ombro)", target:"3x15-20", how:"Mesma execução do treino A, com carga mais leve: suba até a altura dos ombros conduzindo pelos cotovelos e desça devagar. É a terceira dose de ombro da semana, então priorize a técnica.", rest:45, inc:1},
+    {key:"d6", name:"Abdominal", target:"3x15", how:"Deitado, mãos ao lado da cabeça sem puxar o pescoço. Enrole a coluna tirando as escápulas do chão e desça controlando.", rest:45, inc:null}
   ]}
 ];
 
@@ -1444,6 +1459,31 @@ function suggestBlockHTML(ex){
       </div>`;
 }
 
+// Running and lifting share the same legs: flag a lower-body day that lands
+// right after a run so the session can be swapped or lightened.
+function recentRun(){
+  let latest = null;
+  PLAN.forEach(sess=>{
+    const entry = LOG[sess.id];
+    if(!entry || !entry.done || !entry.doneAt) return;
+    const hours = (Date.now() - new Date(entry.doneAt).getTime()) / 3600000;
+    if(hours < 0 || hours > 36) return;
+    if(!latest || new Date(entry.doneAt) > new Date(latest.at)){
+      latest = { type: sess.type, at: entry.doneAt, hours: hours };
+    }
+  });
+  return latest;
+}
+
+function runClashHTML(workout){
+  if(workout.focus.indexOf("Inferior") !== 0) return "";
+  const run = recentRun();
+  if(!run) return "";
+  const when = run.hours < 14 ? "hoje" : "ontem";
+  const other = GYM_PLAN.filter(w => w.focus.indexOf("Superior") === 0).map(w => w.name).join(" ou ");
+  return `<div class="run-clash">⚠️ Você correu ${when} (${run.type}). As pernas ainda estão se recuperando — se puder, faça ${other} hoje e deixe este treino para o próximo dia, ou use uma carga mais leve.</div>`;
+}
+
 function getOrderedWorkouts(){
   const idx = WORKOUT_ORDER_IDS.indexOf(GYM_NEXT_ID);
   const ids = WORKOUT_ORDER_IDS.slice(idx).concat(WORKOUT_ORDER_IDS.slice(0, idx));
@@ -1566,6 +1606,7 @@ function renderGymList(){
         <span class="gym-chevron">${isOpen ? "−" : "+"}</span>
       </div>
       <div class="gym-body ${isOpen ? "open":""}">
+        ${runClashHTML(workout)}
         ${workout.exercises.map(ex => exerciseRowHTML(ex)).join("")}
         <button type="button" class="gym-log-btn" data-role="logbtn">Registrar treino de hoje</button>
       </div>
