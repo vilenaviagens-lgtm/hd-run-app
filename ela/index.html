@@ -71,6 +71,127 @@
       color:color-mix(in srgb, var(--gym-color, var(--track)) 75%, #000);
     }
   }
+  .backup-alert{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:0 0 18px;
+    padding:11px 13px;
+    background:var(--amber-dim);
+    border:1px solid var(--amber);
+    border-radius:8px;
+    font-size:12px;
+    color:var(--amber);
+    line-height:1.45;
+  }
+  .backup-alert:empty{ display:none; }
+  .backup-alert button{
+    background:transparent;
+    border:1px solid var(--amber);
+    color:var(--amber);
+    border-radius:5px;
+    font-family:var(--font-head);
+    font-size:11.5px;
+    padding:5px 11px;
+    cursor:pointer;
+  }
+  .volume-semana{
+    margin-bottom:22px;
+  }
+  .volume-linha{
+    display:flex;
+    align-items:center;
+    gap:9px;
+    margin-bottom:5px;
+  }
+  .volume-nome{
+    flex:0 0 96px;
+    font-size:11.5px;
+    color:var(--ink-dim);
+  }
+  .volume-barra{
+    flex:1;
+    height:8px;
+    background:var(--surface-2);
+    border-radius:4px;
+    overflow:hidden;
+  }
+  .volume-barra span{
+    display:block;
+    height:100%;
+    background:var(--track);
+    border-radius:4px;
+  }
+  .volume-num{
+    flex:0 0 54px;
+    text-align:right;
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    color:var(--ink-dim);
+  }
+  .volume-vazio{
+    font-size:11.5px;
+    color:var(--ink-faint);
+    line-height:1.5;
+  }
+  .gym-undo{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    margin:14px 0 0;
+    padding:9px 12px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:7px;
+    font-size:11.5px;
+    color:var(--ink-dim);
+  }
+  .gym-undo:empty{ display:none; }
+  .gym-undo button{
+    background:transparent;
+    border:1px solid var(--track-light);
+    color:var(--track-light);
+    border-radius:5px;
+    font-family:var(--font-head);
+    font-size:11.5px;
+    padding:5px 11px;
+    cursor:pointer;
+  }
+  .gym-note{
+    width:100%;
+    min-height:54px;
+    margin:4px 0 12px;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:7px;
+    color:var(--ink);
+    font-family:var(--font-head);
+    font-size:13px;
+    padding:9px 11px;
+    resize:vertical;
+  }
+  .gym-note::placeholder{ color:var(--ink-faint); }
+  .gym-history-note{
+    font-size:11px;
+    color:var(--ink-faint);
+    line-height:1.4;
+    margin:2px 0 6px;
+    padding-right:30px;
+  }
+  .gym-history-del{
+    background:transparent;
+    border:none;
+    color:var(--ink-faint);
+    font-size:14px;
+    line-height:1;
+    padding:2px 6px;
+    cursor:pointer;
+  }
+  .gym-history-del:hover{ color:var(--track-light); }
   .theme-toggle{
     flex:0 0 auto;
     width:36px;
@@ -632,6 +753,40 @@
     margin-top:4px;
     line-height:1.4;
   }
+  .ex-chart{
+    margin:10px 0 0;
+  }
+  .ex-chart-title{
+    font-size:10.5px;
+    color:var(--ink-faint);
+    margin-bottom:1px;
+  }
+  .ex-chart svg{
+    width:100%;
+    height:auto;
+    display:block;
+    overflow:visible;
+  }
+  .ex-chart .linha{
+    fill:none;
+    stroke:var(--track-light);
+    stroke-width:2;
+    stroke-linejoin:round;
+    stroke-linecap:round;
+  }
+  .ex-chart .ponto{ fill:var(--ink-faint); }
+  .ex-chart .ponto-atual{ fill:var(--track-light); }
+  .ex-chart .rotulo{
+    fill:var(--ink-dim);
+    font-family:var(--font-mono);
+    font-size:10px;
+  }
+  .ex-chart-caption{
+    font-family:var(--font-mono);
+    font-size:10px;
+    color:var(--ink-faint);
+    margin-top:1px;
+  }
   .ex-last{
     font-family:var(--font-mono);
     font-size:10.5px;
@@ -925,6 +1080,8 @@
     </div>
   </header>
 
+  <div class="backup-alert" id="backupAlert"></div>
+
   <div class="tabnav">
     <button class="tab-btn active" data-tab="corrida">Corrida</button>
     <button class="tab-btn" data-tab="academia">Academia</button>
@@ -970,9 +1127,14 @@
         <span><span class="count" id="gymWeekCount">0/5</span> treinos essa semana</span>
         <span id="gymLastSession"></span>
       </div>
+      <div class="gym-undo" id="gymUndo"></div>
     </div>
     <p class="week-heading">Rotação ABCDE · manutenção de massa em definição · 5x na semana</p>
     <div id="gymList"></div>
+    <div class="stats volume-semana">
+      <h2>Volume da semana</h2>
+      <div id="gymVolume"></div>
+    </div>
     <div class="stats">
       <h2>Histórico recente</h2>
       <div id="gymHistory"></div>
@@ -997,7 +1159,7 @@
 
 
 <script>
-const APP_VERSION = "ela-2026-10-06.2";
+const APP_VERSION = "ela-2026-10-06.3";
 
 // The whole app is one HTML file, so a phone that cached it keeps showing an old
 // build forever. Compare the published version with this one and switch to it.
@@ -1032,7 +1194,7 @@ async function checkForUpdate(force){
 
 // Os dados vivem no localStorage, que é por aparelho: estas funções deixam
 // levar o histórico de um aparelho para outro sem servidor nenhum.
-const BACKUP_KEYS = ["running_log_v1_ela", "gym_weights_v1_ela", "gym_sessions_v1_ela", "gym_next_id_v1_ela", "gym_history_v1_ela"];
+const BACKUP_KEYS = ["running_log_v1_ela", "gym_weights_v1_ela", "gym_sessions_v1_ela", "gym_next_id_v1_ela", "gym_history_v1_ela", "gym_notes_v1_ela"];
 const BACKUP_SNAPSHOT = "backup_anterior_ela";
 
 function collectBackup(){
@@ -1042,6 +1204,88 @@ function collectBackup(){
     if(v !== null) data[k] = v;
   });
   return JSON.stringify({ app:"treino", version:APP_VERSION, exportedAt:new Date().toISOString(), data:data });
+}
+
+const BACKUP_LAST_KEY = "backup_last_v1_ela";
+const BACKUP_SNOOZE_KEY = "backup_snooze_v1_ela";
+
+function marcarBackupFeito(){
+  try{ localStorage.setItem(BACKUP_LAST_KEY, new Date().toISOString()); }catch(e){}
+  renderBackupAlert();
+}
+
+function registrosDesde(iso){
+  const limite = iso ? new Date(iso).getTime() : 0;
+  const treinos = GYM_SESSIONS.filter(s => new Date(s.date).getTime() > limite).length;
+  const corridas = PLAN.filter(s => {
+    const e = LOG[s.id];
+    return e && e.done && e.doneAt && new Date(e.doneAt).getTime() > limite;
+  }).length;
+  return treinos + corridas;
+}
+
+// Backup só protege quem lembra de fazer: o app cobra sozinho quando já há
+// bastante coisa registrada desde o último, ou quando faz muito tempo.
+function precisaDeBackup(){
+  let ultimo = null, soneca = null;
+  try{
+    ultimo = localStorage.getItem(BACKUP_LAST_KEY);
+    soneca = localStorage.getItem(BACKUP_SNOOZE_KEY);
+  }catch(e){ return null; }
+
+  if(soneca && (Date.now() - new Date(soneca).getTime()) < 3*24*3600000) return null;
+
+  const novos = registrosDesde(ultimo);
+  if(novos === 0) return null;
+
+  const dias = ultimo ? Math.floor((Date.now() - new Date(ultimo).getTime()) / 86400000) : null;
+  if(novos >= 10) return { novos:novos, dias:dias };
+  if(dias !== null && dias >= 14) return { novos:novos, dias:dias };
+  if(dias === null && novos >= 5) return { novos:novos, dias:null };
+  return null;
+}
+
+function renderBackupAlert(){
+  const el = document.getElementById("backupAlert");
+  if(!el) return;
+  el.innerHTML = "";
+  const aviso = precisaDeBackup();
+  if(!aviso) return;
+
+  const txt = document.createElement("span");
+  txt.textContent = aviso.dias !== null
+    ? ("Faz " + aviso.dias + " dias desde seu último backup, e há " + aviso.novos + " registro" + (aviso.novos===1?"":"s") + " novo" + (aviso.novos===1?"":"s") + ". Guarde uma cópia.")
+    : ("Você já tem " + aviso.novos + " registros e nenhum backup. Se este aparelho limpar os dados do site, tudo se perde.");
+
+  const fazer = document.createElement("button");
+  fazer.type = "button";
+  fazer.textContent = "Fazer backup";
+  fazer.addEventListener("click", ()=>{
+    const box = document.getElementById("backupBox");
+    if(box){
+      box.open = true;
+      box.scrollIntoView({behavior:"smooth", block:"center"});
+      const btn = document.getElementById("backupCopy");
+      if(btn) setTimeout(()=> btn.focus(), 400);
+    }
+  });
+
+  const depois = document.createElement("button");
+  depois.type = "button";
+  depois.textContent = "Depois";
+  depois.addEventListener("click", ()=>{
+    try{ localStorage.setItem(BACKUP_SNOOZE_KEY, new Date().toISOString()); }catch(e){}
+    renderBackupAlert();
+  });
+
+  const acoes = document.createElement("span");
+  acoes.style.display = "flex";
+  acoes.style.gap = "8px";
+  acoes.appendChild(fazer);
+  acoes.appendChild(depois);
+
+  el.appendChild(txt);
+  el.appendChild(acoes);
 }
 
 function backupMsg(text, erro){
@@ -1113,6 +1357,7 @@ function setupBackup(){
     const txt = collectBackup();
     try{
       await navigator.clipboard.writeText(txt);
+      marcarBackupFeito();
       backupMsg("Backup copiado. Cole no outro aparelho e toque em Restaurar.");
     }catch(e){
       area.value = txt;
@@ -1124,6 +1369,7 @@ function setupBackup(){
   document.getElementById("backupShow").addEventListener("click", ()=>{
     area.value = collectBackup();
     area.select();
+    marcarBackupFeito();
     backupMsg("Esse é o seu backup. Copie tudo e guarde onde quiser.");
   });
 
@@ -1525,50 +1771,52 @@ const GYM_STYLE = {
 
 const GYM_PLAN = [
   {id:"A", name:"Treino A", focus:"Inferior · Quadríceps", exercises:[
-    {key:"ea1", name:"Agachamento livre (ou no smith)", target:"4x8-10", how:"Pés na largura dos ombros, pontas levemente para fora. Desça até a coxa ficar paralela ao chão mantendo o peito aberto e o joelho acompanhando a linha do pé, e suba empurrando o chão.", rest:120, inc:2.5},
-    {key:"ea2", name:"Leg press", target:"3x10-12", how:"Pés na plataforma na largura dos ombros. Desça até formar cerca de 90° no joelho sem tirar o quadril do banco, e empurre sem travar os joelhos.", rest:90, inc:5},
-    {key:"ea3", name:"Afundo com halteres", target:"3x10 (cada perna)", how:"Passo à frente firme, tronco ereto. Desça até o joelho de trás quase tocar o chão e suba empurrando com o calcanhar da perna da frente.", rest:75, inc:2},
-    {key:"ea4", name:"Cadeira extensora", target:"3x12-15", how:"Encosto ajustado para o joelho ficar alinhado ao eixo. Estenda até quase travar, segure meio segundo no topo e desça controlando.", rest:60, inc:2.5},
-    {key:"ea5", name:"Panturrilha em pé", target:"4x15-20", how:"Suba na ponta dos pés o máximo possível, pausa breve no topo, e desça alongando bem.", rest:45, inc:2.5},
-    {key:"ea6", name:"Prancha", target:"3x40s", how:"Apoio em antebraços e pontas dos pés, corpo alinhado. Contraia o abdômen e o glúteo e evite deixar o quadril cair.", rest:45, inc:null}
+    {key:"ea1", grupo:"Quadríceps", name:"Agachamento livre (ou no smith)", target:"4x8-10", how:"Pés na largura dos ombros, pontas levemente para fora. Desça até a coxa ficar paralela ao chão mantendo o peito aberto e o joelho acompanhando a linha do pé, e suba empurrando o chão.", rest:120, inc:2.5},
+    {key:"ea2", grupo:"Quadríceps", name:"Leg press", target:"3x10-12", how:"Pés na plataforma na largura dos ombros. Desça até formar cerca de 90° no joelho sem tirar o quadril do banco, e empurre sem travar os joelhos.", rest:90, inc:5},
+    {key:"ea3", grupo:"Quadríceps", name:"Afundo com halteres", target:"3x10 (cada perna)", how:"Passo à frente firme, tronco ereto. Desça até o joelho de trás quase tocar o chão e suba empurrando com o calcanhar da perna da frente.", rest:75, inc:2},
+    {key:"ea4", grupo:"Quadríceps", name:"Cadeira extensora", target:"3x12-15", how:"Encosto ajustado para o joelho ficar alinhado ao eixo. Estenda até quase travar, segure meio segundo no topo e desça controlando.", rest:60, inc:2.5},
+    {key:"ea5", grupo:"Panturrilha", name:"Panturrilha em pé", target:"4x15-20", how:"Suba na ponta dos pés o máximo possível, pausa breve no topo, e desça alongando bem.", rest:45, inc:2.5},
+    {key:"ea6", grupo:"Core", name:"Prancha", target:"3x40s", how:"Apoio em antebraços e pontas dos pés, corpo alinhado. Contraia o abdômen e o glúteo e evite deixar o quadril cair.", rest:45, inc:null}
   ]},
   {id:"B", name:"Treino B", focus:"Superior · Peito, ombro e tríceps", exercises:[
-    {key:"eb1", name:"Supino reto com halteres", target:"4x8-10", how:"Escápulas encaixadas no banco, halteres na linha do peito. Desça até sentir alongar e suba sem bater os halteres um no outro.", rest:90, inc:2},
-    {key:"eb2", name:"Supino inclinado (máquina ou halteres)", target:"3x10-12", how:"Banco a 30-45°. Desça controlando até a linha do peito alto e suba sem travar os cotovelos.", rest:75, inc:2.5},
-    {key:"eb3", name:"Desenvolvimento com halteres", target:"3x10-12", how:"Sentada com o encosto quase vertical. Suba até quase estender os cotovelos e desça até a altura das orelhas.", rest:90, inc:2},
-    {key:"eb4", name:"Elevação lateral", target:"4x12-15", how:"Cotovelos levemente flexionados, suba até a altura dos ombros conduzindo pelos cotovelos, sem balançar o tronco, e desça devagar.", rest:45, inc:1},
-    {key:"eb5", name:"Tríceps corda", target:"3x12-15", how:"Cotovelos colados ao tronco e parados. Estenda abrindo a corda no final e volte controlando.", rest:45, inc:1},
-    {key:"eb6", name:"Tríceps francês", target:"3x12", how:"Halter acima da cabeça, cotovelos apontados para cima e fixos. Desça atrás da cabeça e estenda sem abrir os cotovelos.", rest:45, inc:1}
+    {key:"eb1", grupo:"Peito", name:"Supino reto com halteres", target:"4x8-10", how:"Escápulas encaixadas no banco, halteres na linha do peito. Desça até sentir alongar e suba sem bater os halteres um no outro.", rest:90, inc:2},
+    {key:"eb2", grupo:"Peito", name:"Supino inclinado (máquina ou halteres)", target:"3x10-12", how:"Banco a 30-45°. Desça controlando até a linha do peito alto e suba sem travar os cotovelos.", rest:75, inc:2.5},
+    {key:"eb3", grupo:"Ombro", name:"Desenvolvimento com halteres", target:"3x10-12", how:"Sentada com o encosto quase vertical. Suba até quase estender os cotovelos e desça até a altura das orelhas.", rest:90, inc:2},
+    {key:"eb4", grupo:"Ombro", name:"Elevação lateral", target:"4x12-15", how:"Cotovelos levemente flexionados, suba até a altura dos ombros conduzindo pelos cotovelos, sem balançar o tronco, e desça devagar.", rest:45, inc:1},
+    {key:"eb5", grupo:"Tríceps", name:"Tríceps corda", target:"3x12-15", how:"Cotovelos colados ao tronco e parados. Estenda abrindo a corda no final e volte controlando.", rest:45, inc:1},
+    {key:"eb6", grupo:"Tríceps", name:"Tríceps francês", target:"3x12", how:"Halter acima da cabeça, cotovelos apontados para cima e fixos. Desça atrás da cabeça e estenda sem abrir os cotovelos.", rest:45, inc:1}
   ]},
   {id:"C", name:"Treino C", focus:"Inferior · Posterior e glúteo", exercises:[
-    {key:"ec1", name:"Levantamento terra romeno", target:"4x8-10", how:"Joelhos levemente flexionados, barra rente às pernas. Empurre o quadril para trás até sentir alongar o posterior e suba contraindo o glúteo.", rest:120, inc:2.5},
-    {key:"ec2", name:"Hip thrust", target:"4x10-12", how:"Costas apoiadas no banco na linha das escápulas, queixo para baixo. Suba até o tronco ficar paralelo ao chão contraindo o glúteo no topo, e desça controlando.", rest:90, inc:5},
-    {key:"ec3", name:"Mesa flexora (deitada)", target:"3x12-15", how:"Deitada de bruços, rolo logo acima dos calcanhares. Flexione levando o calcanhar ao glúteo e controle a volta sem tirar o quadril do banco.", rest:60, inc:2.5},
-    {key:"ec4", name:"Abdução de quadril (máquina)", target:"3x15-20", how:"Sentada com a coluna apoiada. Abra as pernas até o limite confortável, segure meio segundo, e feche devagar sem deixar o peso bater.", rest:45, inc:2.5},
-    {key:"ec5", name:"Panturrilha sentada", target:"4x15-20", how:"Joelhos a 90° com o apoio sobre as coxas. Suba na ponta dos pés, pausa no topo, e desça alongando.", rest:45, inc:2.5},
-    {key:"ec6", name:"Elevação de pernas", target:"3x15", how:"Deitada, mãos sob o quadril. Suba as pernas estendidas até a vertical sem tirar a lombar do chão e desça controlando.", rest:45, inc:null}
+    {key:"ec1", grupo:"Posterior", name:"Levantamento terra romeno", target:"4x8-10", how:"Joelhos levemente flexionados, barra rente às pernas. Empurre o quadril para trás até sentir alongar o posterior e suba contraindo o glúteo.", rest:120, inc:2.5},
+    {key:"ec2", grupo:"Glúteo", name:"Hip thrust", target:"4x10-12", how:"Costas apoiadas no banco na linha das escápulas, queixo para baixo. Suba até o tronco ficar paralelo ao chão contraindo o glúteo no topo, e desça controlando.", rest:90, inc:5},
+    {key:"ec3", grupo:"Posterior", name:"Mesa flexora (deitada)", target:"3x12-15", how:"Deitada de bruços, rolo logo acima dos calcanhares. Flexione levando o calcanhar ao glúteo e controle a volta sem tirar o quadril do banco.", rest:60, inc:2.5},
+    {key:"ec4", grupo:"Glúteo", name:"Abdução de quadril (máquina)", target:"3x15-20", how:"Sentada com a coluna apoiada. Abra as pernas até o limite confortável, segure meio segundo, e feche devagar sem deixar o peso bater.", rest:45, inc:2.5},
+    {key:"ec5", grupo:"Panturrilha", name:"Panturrilha sentada", target:"4x15-20", how:"Joelhos a 90° com o apoio sobre as coxas. Suba na ponta dos pés, pausa no topo, e desça alongando.", rest:45, inc:2.5},
+    {key:"ec6", grupo:"Core", name:"Elevação de pernas", target:"3x15", how:"Deitada, mãos sob o quadril. Suba as pernas estendidas até a vertical sem tirar a lombar do chão e desça controlando.", rest:45, inc:null}
   ]},
   {id:"D", name:"Treino D", focus:"Superior · Costas e bíceps", exercises:[
-    {key:"ed1", name:"Puxada frontal (pulley)", target:"4x8-10", how:"Pegada um pouco mais aberta que os ombros. Puxe até a altura do queixo levando o peito à frente, e controle a subida.", rest:90, inc:2.5},
-    {key:"ed2", name:"Remada baixa (triângulo)", target:"4x10-12", how:"Coluna neutra, joelhos levemente flexionados. Puxe até a barriga aproximando as escápulas, sem jogar o tronco para trás.", rest:90, inc:2.5},
-    {key:"ed3", name:"Remada unilateral (serrote)", target:"3x10 (cada lado)", how:"Apoie joelho e mão no banco, coluna paralela ao chão. Puxe o halter em direção ao quadril levando o cotovelo para trás, e desça alongando.", rest:75, inc:2},
-    {key:"ed4", name:"Crucifixo invertido", target:"3x12-15", how:"Tronco inclinado à frente ou no peck deck invertido. Abra os braços conduzindo pelos cotovelos e volte devagar.", rest:45, inc:1},
-    {key:"ed5", name:"Rosca direta", target:"3x10-12", how:"Cotovelos fixos ao lado do corpo. Suba sem balançar o tronco e desça controlando até quase estender.", rest:45, inc:1},
-    {key:"ed6", name:"Rosca martelo", target:"3x12-15", how:"Pegada neutra, polegares para cima. Suba sem girar o punho e desça controlando.", rest:45, inc:1}
+    {key:"ed1", grupo:"Costas", name:"Puxada frontal (pulley)", target:"4x8-10", how:"Pegada um pouco mais aberta que os ombros. Puxe até a altura do queixo levando o peito à frente, e controle a subida.", rest:90, inc:2.5},
+    {key:"ed2", grupo:"Costas", name:"Remada baixa (triângulo)", target:"4x10-12", how:"Coluna neutra, joelhos levemente flexionados. Puxe até a barriga aproximando as escápulas, sem jogar o tronco para trás.", rest:90, inc:2.5},
+    {key:"ed3", grupo:"Costas", name:"Remada unilateral (serrote)", target:"3x10 (cada lado)", how:"Apoie joelho e mão no banco, coluna paralela ao chão. Puxe o halter em direção ao quadril levando o cotovelo para trás, e desça alongando.", rest:75, inc:2},
+    {key:"ed4", grupo:"Ombro", name:"Crucifixo invertido", target:"3x12-15", how:"Tronco inclinado à frente ou no peck deck invertido. Abra os braços conduzindo pelos cotovelos e volte devagar.", rest:45, inc:1},
+    {key:"ed5", grupo:"Bíceps", name:"Rosca direta", target:"3x10-12", how:"Cotovelos fixos ao lado do corpo. Suba sem balançar o tronco e desça controlando até quase estender.", rest:45, inc:1},
+    {key:"ed6", grupo:"Bíceps", name:"Rosca martelo", target:"3x12-15", how:"Pegada neutra, polegares para cima. Suba sem girar o punho e desça controlando.", rest:45, inc:1}
   ]},
   {id:"E", name:"Treino E", focus:"Full body · acessórios e core", exercises:[
-    {key:"ee1", name:"Agachamento goblet", target:"3x12-15", how:"Halter ou kettlebell junto ao peito. Desça entre os joelhos mantendo o tronco ereto e suba empurrando o chão. Carga moderada, foco na técnica.", rest:60, inc:2},
-    {key:"ee2", name:"Remada máquina", target:"3x12-15", how:"Peito apoiado, puxe aproximando as escápulas e volte alongando as costas sem soltar o peso.", rest:60, inc:2.5},
-    {key:"ee3", name:"Supino máquina", target:"3x12-15", how:"Manoplas na linha do peito, costas apoiadas. Empurre até quase estender e volte controlando o alongamento.", rest:60, inc:2.5},
-    {key:"ee4", name:"Elevação lateral (extra)", target:"3x15-20", how:"Mesma execução do treino B, com carga mais leve. É a segunda dose de ombro da semana, priorize a técnica.", rest:45, inc:1},
-    {key:"ee5", name:"Face pull", target:"3x15", how:"Corda na altura do rosto, cotovelos altos. Puxe separando as mãos na direção da testa, apertando a parte de trás dos ombros, e volte devagar.", rest:45, inc:1},
-    {key:"ee6", name:"Abdominal na polia", target:"3x15", how:"Ajoelhada de costas para a polia, corda ao lado da cabeça. Enrole a coluna levando os cotovelos aos joelhos usando o abdômen, não os braços.", rest:45, inc:2.5}
+    {key:"ee1", grupo:"Quadríceps", name:"Agachamento goblet", target:"3x12-15", how:"Halter ou kettlebell junto ao peito. Desça entre os joelhos mantendo o tronco ereto e suba empurrando o chão. Carga moderada, foco na técnica.", rest:60, inc:2},
+    {key:"ee2", grupo:"Costas", name:"Remada máquina", target:"3x12-15", how:"Peito apoiado, puxe aproximando as escápulas e volte alongando as costas sem soltar o peso.", rest:60, inc:2.5},
+    {key:"ee3", grupo:"Peito", name:"Supino máquina", target:"3x12-15", how:"Manoplas na linha do peito, costas apoiadas. Empurre até quase estender e volte controlando o alongamento.", rest:60, inc:2.5},
+    {key:"ee4", grupo:"Ombro", name:"Elevação lateral (extra)", target:"3x15-20", how:"Mesma execução do treino B, com carga mais leve. É a segunda dose de ombro da semana, priorize a técnica.", rest:45, inc:1},
+    {key:"ee5", grupo:"Ombro", name:"Face pull", target:"3x15", how:"Corda na altura do rosto, cotovelos altos. Puxe separando as mãos na direção da testa, apertando a parte de trás dos ombros, e volte devagar.", rest:45, inc:1},
+    {key:"ee6", grupo:"Core", name:"Abdominal na polia", target:"3x15", how:"Ajoelhada de costas para a polia, corda ao lado da cabeça. Enrole a coluna levando os cotovelos aos joelhos usando o abdômen, não os braços.", rest:45, inc:2.5}
   ]}
 ];
 
 let GYM_WEIGHTS = {};
 let GYM_SESSIONS = [];
 let GYM_HISTORY = {};
+let GYM_NOTES = {};
+let GYM_UNDO = null;
 let openGymCard = null;
 let GYM_NEXT_ID = "A";
 const WORKOUT_ORDER_IDS = GYM_PLAN.map(w => w.id);
@@ -1583,6 +1831,9 @@ async function loadGym(){
     if(n && WORKOUT_ORDER_IDS.includes(n)) GYM_NEXT_ID = n;
     const h = localStorage.getItem("gym_history_v1_ela");
     if(h) GYM_HISTORY = JSON.parse(h);
+    const no = localStorage.getItem("gym_notes_v1_ela");
+    if(no) GYM_NOTES = JSON.parse(no);
+    GYM_UNDO = localStorage.getItem("gym_undo_v1_ela");
   }catch(e){ /* ignore, start fresh */ }
 }
 
@@ -1600,6 +1851,67 @@ async function saveGymRotation(){
 
 async function saveGymHistory(){
   try{ localStorage.setItem("gym_history_v1_ela", JSON.stringify(GYM_HISTORY)); }catch(e){}
+}
+
+async function saveGymNotes(){
+  try{ localStorage.setItem("gym_notes_v1_ela", JSON.stringify(GYM_NOTES)); }catch(e){}
+}
+
+// Guarda o estado inteiro antes de registrar um treino, para dar um passo atrás
+// sem precisar remontar séries, histórico e rotação na mão.
+function snapshotGym(){
+  return JSON.stringify({
+    sessions: GYM_SESSIONS,
+    weights: GYM_WEIGHTS,
+    history: GYM_HISTORY,
+    notes: GYM_NOTES,
+    nextId: GYM_NEXT_ID,
+    at: new Date().toISOString()
+  });
+}
+
+function saveGymUndo(){
+  try{
+    if(GYM_UNDO) localStorage.setItem("gym_undo_v1_ela", GYM_UNDO);
+    else localStorage.removeItem("gym_undo_v1_ela");
+  }catch(e){}
+}
+
+function desfazerUltimoRegistro(){
+  if(!GYM_UNDO) return;
+  let snap;
+  try{ snap = JSON.parse(GYM_UNDO); }catch(e){ GYM_UNDO = null; saveGymUndo(); return; }
+  GYM_SESSIONS = snap.sessions || [];
+  GYM_WEIGHTS = snap.weights || {};
+  GYM_HISTORY = snap.history || {};
+  GYM_NOTES = snap.notes || {};
+  if(snap.nextId) GYM_NEXT_ID = snap.nextId;
+  GYM_UNDO = null;
+  saveGymUndo(); saveGymSessions(); saveGymWeights(); saveGymHistory(); saveGymNotes(); saveGymRotation();
+  openGymCard = GYM_NEXT_ID;
+  renderGymAll();
+}
+
+function renderGymUndo(){
+  const el = document.getElementById("gymUndo");
+  if(!el) return;
+  el.innerHTML = "";
+  if(!GYM_UNDO) return;
+  let snap;
+  try{ snap = JSON.parse(GYM_UNDO); }catch(e){ return; }
+  const ultimo = GYM_SESSIONS[GYM_SESSIONS.length-1];
+  if(!ultimo) return;
+  const quando = new Date(ultimo.date);
+  const horas = (Date.now() - quando.getTime()) / 3600000;
+  if(horas > 24) return;   // passado isso, desfazer já não é o que a pessoa quer
+  const span = document.createElement("span");
+  span.textContent = ultimo.name + " registrado às " + quando.toLocaleTimeString("pt-BR", {hour:"2-digit", minute:"2-digit"});
+  const btn = document.createElement("button");
+  btn.type = "button";
+  btn.textContent = "desfazer";
+  btn.addEventListener("click", desfazerUltimoRegistro);
+  el.appendChild(span);
+  el.appendChild(btn);
 }
 
 function getExEntry(key, setsCount){
@@ -1707,6 +2019,63 @@ function suggestFromHistory(ex){
   return out;
 }
 
+// Série do exercício ao longo das sessões: carga quando há carga, senão o
+// próprio desempenho (segundos na prancha, reps no peso corporal).
+function serieDoExercicio(ex){
+  const t = parseTarget(ex.target);
+  const comPeso = !t.isTime;
+  const pontos = exHistory(ex.key).map(h=>({
+    date: h.date,
+    valor: (comPeso && h.st.weight !== null) ? h.st.weight : h.st.avgReps,
+    peso: h.st.weight,
+    reps: h.st.reps
+  }));
+  let unidade = "reps";
+  if(t.isTime) unidade = "s";
+  else if(pontos.length && pontos[pontos.length-1].peso !== null) unidade = "kg";
+  return { pontos:pontos, unidade:unidade };
+}
+
+// Sparkline de série única: linha fina, pontos discretos e só o valor atual
+// rotulado. Como a escala não começa no zero, a legenda diz menor e maior.
+function chartHTML(ex){
+  const serie = serieDoExercicio(ex);
+  const pontos = serie.pontos;
+  if(pontos.length < 2) return "";
+
+  const W = 260, H = 54, padX = 8, padTop = 10, padBottom = 14, faixaRotulo = 48;
+  const vals = pontos.map(p => p.valor);
+  const min = Math.min.apply(null, vals), max = Math.max.apply(null, vals);
+  const util = W - padX*2 - faixaRotulo;
+  const alturaUtil = H - padTop - padBottom;
+  const x = i => padX + (i / (pontos.length - 1)) * util;
+  const y = v => (max === min) ? (padTop + alturaUtil/2) : (padTop + (1 - (v - min)/(max - min)) * alturaUtil);
+
+  const d = pontos.map((p,i)=> (i ? "L" : "M") + x(i).toFixed(1) + " " + y(p.valor).toFixed(1)).join(" ");
+
+  const circulos = pontos.map((p,i)=>{
+    const atual = i === pontos.length - 1;
+    const quando = new Date(p.date).toLocaleDateString("pt-BR", {day:"2-digit", month:"2-digit"});
+    const detalhe = quando + " · " + fmtNum(p.valor) + " " + serie.unidade + (p.reps ? (" · " + p.reps.join("/") + " reps") : "");
+    return `<circle class="${atual ? "ponto-atual" : "ponto"}" cx="${x(i).toFixed(1)}" cy="${y(p.valor).toFixed(1)}" r="${atual ? 4 : 2.5}"><title>${detalhe}</title></circle>`;
+  }).join("");
+
+  const ultimo = pontos[pontos.length-1];
+  const rotulo = `<text class="rotulo" x="${(padX + util + 8).toFixed(1)}" y="${(y(ultimo.valor) + 3.5).toFixed(1)}">${fmtNum(ultimo.valor)} ${serie.unidade}</text>`;
+  const resumo = "Carga por treino: " + vals.map(fmtNum).join(", ") + " " + serie.unidade;
+
+  return `
+      <div class="ex-chart">
+        <div class="ex-chart-title">Evolução nos últimos ${pontos.length} treinos</div>
+        <svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${resumo}">
+          <path class="linha" d="${d}" vector-effect="non-scaling-stroke"/>
+          ${circulos}
+          ${rotulo}
+        </svg>
+        <div class="ex-chart-caption">menor ${fmtNum(min)} · maior ${fmtNum(max)} ${serie.unidade}</div>
+      </div>`;
+}
+
 function suggestBlockHTML(ex){
   const sug = suggestFromHistory(ex);
   if(!sug.hasHistory){
@@ -1803,8 +2172,32 @@ function renderGymHistory(){
   }
   el.innerHTML = recent.map(s=>{
     const d = new Date(s.date);
-    return `<div class="gym-history-row"><span>${s.name}</span><span>${d.toLocaleDateString("pt-BR")}</span></div>`;
+    const idx = GYM_SESSIONS.indexOf(s);
+    const nota = s.nota ? `<div class="gym-history-note">${escapeHTML(s.nota)}</div>` : "";
+    return `<div class="gym-history-row">
+        <span>${s.name}</span>
+        <span>${d.toLocaleDateString("pt-BR")}
+          <button type="button" class="gym-history-del" data-role="delsession" data-idx="${idx}" title="Apagar este registro">✕</button>
+        </span>
+      </div>${nota}`;
   }).join("");
+
+  el.querySelectorAll('[data-role="delsession"]').forEach(btn=>{
+    btn.addEventListener("click", ()=>{
+      const idx = parseInt(btn.getAttribute("data-idx"), 10);
+      const alvo = GYM_SESSIONS[idx];
+      if(!alvo) return;
+      if(!confirm("Apagar o registro de " + alvo.name + " em " + new Date(alvo.date).toLocaleDateString("pt-BR") + "? As cargas anotadas continuam salvas.")) return;
+      GYM_SESSIONS.splice(idx, 1);
+      saveGymSessions();
+      renderGymTopSummary();
+      renderGymHistory();
+    });
+  });
+}
+
+function escapeHTML(txt){
+  return String(txt).replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
 }
 
 function exerciseRowHTML(ex){
@@ -1832,6 +2225,7 @@ function exerciseRowHTML(ex){
         </label>
       </div>
       ${suggestBlockHTML(ex)}
+      ${chartHTML(ex)}
       <div class="sets-table">
         <div class="sets-header"><span></span><span>Peso (kg)</span><span>${valLabel}</span></div>
         ${setsRows}
@@ -1854,9 +2248,22 @@ function exerciseRowHTML(ex){
     </div>`;
 }
 
+const REST_TIMERS = new Set();
+let restVisibilityBound = false;
+
+function bindRestVisibility(){
+  if(restVisibilityBound) return;
+  restVisibilityBound = true;
+  document.addEventListener("visibilitychange", ()=>{
+    if(!document.hidden) REST_TIMERS.forEach(fn => fn());
+  });
+}
+
 function renderGymList(){
   const el = document.getElementById("gymList");
   el.innerHTML = "";
+  REST_TIMERS.clear();
+  bindRestVisibility();
   getOrderedWorkouts().forEach(workout=>{
     const style = GYM_STYLE[workout.focus] || {};
     const card = document.createElement("div");
@@ -1878,6 +2285,7 @@ function renderGymList(){
       <div class="gym-body ${isOpen ? "open":""}">
         ${runClashHTML(workout)}
         ${workout.exercises.map(ex => exerciseRowHTML(ex)).join("")}
+        <textarea class="gym-note" data-role="gymnote" placeholder="Como foi o treino? (opcional)">${escapeHTML(GYM_NOTES[workout.id] || "")}</textarea>
         <button type="button" class="gym-log-btn" data-role="logbtn">Registrar treino de hoje</button>
       </div>
     `;
@@ -1949,16 +2357,37 @@ function renderGymList(){
         const presetBtns = timerEl.querySelectorAll('[data-role="restpreset"]');
 
         const defaultRest = parseInt(timerEl.getAttribute("data-rest"), 10) || 90;
-        const state = { total: defaultRest, remaining: defaultRest, intervalId: null, running: false };
+        // endsAt é a fonte da verdade: contar tiques erra quando o celular
+        // suspende a aba, e o descanso é justamente quando a tela apaga.
+        const state = { total: defaultRest, remaining: defaultRest, endsAt: null, intervalId: null, running: false, lock: null };
 
         function render(){
           display.textContent = formatMMSS(state.remaining);
         }
 
-        function finish(){
+        async function segurarTela(){
+          try{
+            if(navigator.wakeLock && !state.lock && state.running){
+              state.lock = await navigator.wakeLock.request("screen");
+              state.lock.addEventListener("release", ()=>{ state.lock = null; });
+            }
+          }catch(e){ /* sem wake lock, o descanso continua pelo relógio */ }
+        }
+
+        function soltarTela(){
+          try{ if(state.lock){ state.lock.release(); state.lock = null; } }catch(e){}
+        }
+
+        function parar(){
           clearInterval(state.intervalId);
           state.intervalId = null;
           state.running = false;
+          state.endsAt = null;
+          soltarTela();
+        }
+
+        function finish(){
+          parar();
           timerEl.classList.remove("running");
           timerEl.classList.add("done");
           startBtn.textContent = "Iniciar descanso";
@@ -1968,15 +2397,18 @@ function renderGymList(){
         }
 
         function tick(){
-          state.remaining -= 1;
-          if(state.remaining <= 0){
-            state.remaining = 0;
-            render();
-            finish();
-          } else {
-            render();
-          }
+          if(!state.running || state.endsAt === null) return;
+          const faltam = Math.max(0, Math.round((state.endsAt - Date.now()) / 1000));
+          state.remaining = faltam;
+          render();
+          if(faltam <= 0) finish();
         }
+
+        REST_TIMERS.add(()=>{
+          if(!state.running) return;
+          tick();
+          segurarTela();   // o sistema solta o wake lock quando a aba sai de cena
+        });
 
         presetBtns.forEach(pb=>{
           pb.addEventListener("click", ()=>{
@@ -1993,25 +2425,25 @@ function renderGymList(){
 
         startBtn.addEventListener("click", ()=>{
           if(state.running){
-            clearInterval(state.intervalId);
-            state.intervalId = null;
-            state.running = false;
+            state.remaining = Math.max(0, Math.round((state.endsAt - Date.now()) / 1000));
+            parar();
             timerEl.classList.remove("running");
             startBtn.textContent = "Continuar";
+            render();
           } else {
             if(state.remaining <= 0) state.remaining = state.total;
             state.running = true;
+            state.endsAt = Date.now() + state.remaining * 1000;
             timerEl.classList.remove("done");
             timerEl.classList.add("running");
             startBtn.textContent = "Pausar";
-            state.intervalId = setInterval(tick, 1000);
+            state.intervalId = setInterval(tick, 250);
+            segurarTela();
           }
         });
 
         resetBtn.addEventListener("click", ()=>{
-          clearInterval(state.intervalId);
-          state.intervalId = null;
-          state.running = false;
+          parar();
           state.remaining = state.total;
           timerEl.classList.remove("running", "done");
           startBtn.textContent = "Iniciar descanso";
@@ -2022,11 +2454,26 @@ function renderGymList(){
       }
     });
 
+    const noteEl = card.querySelector('[data-role="gymnote"]');
+    if(noteEl){
+      noteEl.addEventListener("change", ()=>{
+        GYM_NOTES[workout.id] = noteEl.value;
+        saveGymNotes();
+      });
+    }
+
     const logBtn = card.querySelector('[data-role="logbtn"]');
     if(logBtn){
       logBtn.addEventListener("click", ()=>{
-        GYM_SESSIONS.push({workoutId: workout.id, name: workout.name, date: new Date().toISOString()});
+        GYM_UNDO = snapshotGym();
+        saveGymUndo();
+
+        const nota = noteEl ? (noteEl.value||"").trim() : "";
+        GYM_SESSIONS.push({workoutId: workout.id, name: workout.name, date: new Date().toISOString(), nota: nota});
         saveGymSessions();
+
+        delete GYM_NOTES[workout.id];
+        saveGymNotes();
 
         workout.exercises.forEach(ex=>{
           const entry = getExEntry(ex.key, parseSetsCount(ex.target));
@@ -2059,6 +2506,9 @@ function renderGymList(){
         renderGymTopSummary();
         renderGymHistory();
         renderGymList();
+        renderGymUndo();
+        renderGymVolume();
+        renderBackupAlert();
       });
     }
 
@@ -2066,10 +2516,49 @@ function renderGymList(){
   });
 }
 
+// Soma as séries efetivamente registradas na semana, por grupo muscular.
+function volumeDaSemana(){
+  const inicio = startOfWeek(new Date());
+  const total = {};
+  GYM_PLAN.forEach(w => w.exercises.forEach(ex=>{
+    const grupo = ex.grupo;
+    if(!grupo) return;
+    (GYM_HISTORY[ex.key] || []).forEach(h=>{
+      if(new Date(h.date) < inicio) return;
+      const feitas = (h.sets||[]).filter(st => st && st.reps !== "" && st.reps !== undefined && !isNaN(parseInt(st.reps,10))).length;
+      if(feitas) total[grupo] = (total[grupo] || 0) + feitas;
+    });
+  }));
+  return total;
+}
+
+function renderGymVolume(){
+  const el = document.getElementById("gymVolume");
+  if(!el) return;
+  const total = volumeDaSemana();
+  const linhas = Object.keys(total).sort((a,b)=> total[b] - total[a]);
+  if(!linhas.length){
+    el.innerHTML = '<div class="volume-vazio">Assim que você registrar um treino, aparece aqui quantas séries cada grupo muscular recebeu nesta semana.</div>';
+    return;
+  }
+  const maior = total[linhas[0]];
+  el.innerHTML = linhas.map(g=>{
+    const n = total[g];
+    const pct = Math.round((n / maior) * 100);
+    return `<div class="volume-linha">
+        <span class="volume-nome">${g}</span>
+        <span class="volume-barra"><span style="width:${pct}%"></span></span>
+        <span class="volume-num">${n} série${n===1?"":"s"}</span>
+      </div>`;
+  }).join("");
+}
+
 function renderGymAll(){
   renderGymList();
   renderGymTopSummary();
   renderGymHistory();
+  renderGymUndo();
+  renderGymVolume();
 }
 
 function setupTabs(){
@@ -2104,6 +2593,7 @@ function setupTabs(){
   setupVersionBadge();
   setupBackup();
   setupTheme();
+  renderBackupAlert();
 })();
 </script>
 </body>
