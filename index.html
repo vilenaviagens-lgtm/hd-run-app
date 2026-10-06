@@ -32,6 +32,57 @@
     --line:#362F24;
     --font-head: 'Space Grotesk', sans-serif;
     --font-mono: 'IBM Plex Mono', monospace;
+    --on-track:#FFFFFF;
+    color-scheme:dark;
+  }
+  :root[data-theme="light"]{
+    --bg:#F7F3EA;
+    --surface:#FFFFFF;
+    --surface-2:#F0EADE;
+    --ink:#201B13;
+    --ink-dim:#5F5648;
+    --ink-faint:#8A7F6C;
+    --line:#DFD6C4;
+    --track:#2F7D4F;
+    --track-light:#1F6B45;
+    --moss:#4C6B33;
+    --moss-dim:#CFDDBB;
+    --amber:#8A6420;
+    --amber-dim:#F2E6CB;
+    color-scheme:light;
+  }
+  /* os chips de treino têm fundo escuro fixo; no modo claro viram tinta sobre branco */
+  :root[data-theme="light"] .type-badge,
+  :root[data-theme="light"] .gym-focus{
+    background:var(--surface-2);
+    color:var(--ink-dim);
+  }
+  @supports (background: color-mix(in srgb, red 10%, white)){
+    :root[data-theme="light"] .type-badge{
+      background:color-mix(in srgb, var(--type-color, var(--track)) 16%, #fff);
+      color:color-mix(in srgb, var(--type-color, var(--track)) 72%, #000);
+    }
+    :root[data-theme="light"] .gym-focus{
+      background:color-mix(in srgb, var(--gym-color, var(--track)) 16%, #fff);
+      color:color-mix(in srgb, var(--gym-color, var(--track)) 72%, #000);
+    }
+    :root[data-theme="light"] .gym-log-btn,
+    :root[data-theme="light"] .gym-history-row{
+      color:color-mix(in srgb, var(--gym-color, var(--track)) 75%, #000);
+    }
+  }
+  .theme-toggle{
+    flex:0 0 auto;
+    width:36px;
+    height:36px;
+    border-radius:50%;
+    border:1px solid var(--line);
+    background:var(--surface-2);
+    color:var(--ink-dim);
+    font-size:15px;
+    line-height:1;
+    cursor:pointer;
+    padding:0;
   }
   *{box-sizing:border-box;}
   body{
@@ -424,7 +475,7 @@
   }
   .tab-btn.active{
     background:var(--track);
-    color:#2A0E02;
+    color:var(--on-track);
     font-weight:600;
   }
 
@@ -573,7 +624,7 @@
   }
   .ex-suggest-apply:active{
     background:var(--amber);
-    color:#2A1C05;
+    color:var(--surface);
   }
   .ex-suggest-why{
     font-size:11px;
@@ -826,6 +877,17 @@
     display:none;
   }
 </style>
+<script>
+// antes do primeiro pixel, para a tela não piscar no tema errado
+(function(){
+  try{
+    var escolhido = localStorage.getItem("theme_v1");
+    var claro = escolhido ? (escolhido === "claro")
+      : (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches);
+    document.documentElement.setAttribute("data-theme", claro ? "light" : "dark");
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
 <div class="wrap">
@@ -835,6 +897,7 @@
       <div class="hero-text">
         <div class="eyebrow-row">
           <h1>Treino</h1>
+          <button type="button" class="theme-toggle" id="themeToggle" aria-label="Alternar entre modo claro e escuro"></button>
         </div>
         <p class="sub">6 semanas · terça, quinta e sábado</p>
       </div>
@@ -935,7 +998,7 @@
 
 
 <script>
-const APP_VERSION = "2026-10-06.1";
+const APP_VERSION = "2026-10-06.2";
 
 // The whole app is one HTML file, so a phone that cached it keeps showing an old
 // build forever. Compare the published version with this one and switch to it.
@@ -995,6 +1058,49 @@ function renderBackupCount(){
   const treinos = GYM_SESSIONS.length;
   const corridas = PLAN.filter(s => LOG[s.id] && LOG[s.id].done).length;
   el.textContent = treinos + " treino" + (treinos===1?"":"s") + " de academia e " + corridas + " corrida" + (corridas===1?"":"s") + " guardados neste aparelho";
+}
+
+const THEME_KEY = "theme_v1";
+const THEME_BG = { claro:"#F7F3EA", escuro:"#15120E" };
+
+function temaGuardado(){
+  try{ return localStorage.getItem(THEME_KEY); }catch(e){ return null; }
+}
+
+function temaDoSistema(){
+  return (window.matchMedia && window.matchMedia("(prefers-color-scheme: light)").matches) ? "claro" : "escuro";
+}
+
+function aplicarTema(modo){
+  document.documentElement.setAttribute("data-theme", modo === "claro" ? "light" : "dark");
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute("content", THEME_BG[modo]);
+  const btn = document.getElementById("themeToggle");
+  if(btn){
+    btn.textContent = modo === "claro" ? "\u263D" : "\u2600";
+    btn.title = modo === "claro" ? "Mudar para o modo escuro" : "Mudar para o modo claro";
+  }
+}
+
+function setupTheme(){
+  aplicarTema(temaGuardado() || temaDoSistema());
+
+  const btn = document.getElementById("themeToggle");
+  if(btn){
+    btn.addEventListener("click", ()=>{
+      const novo = document.documentElement.getAttribute("data-theme") === "light" ? "escuro" : "claro";
+      try{ localStorage.setItem(THEME_KEY, novo); }catch(e){}
+      aplicarTema(novo);
+    });
+  }
+
+  // enquanto nenhuma escolha for feita, acompanha o sistema
+  if(window.matchMedia){
+    const mq = window.matchMedia("(prefers-color-scheme: light)");
+    const ouvir = e => { if(!temaGuardado()) aplicarTema(e.matches ? "claro" : "escuro"); };
+    if(mq.addEventListener) mq.addEventListener("change", ouvir);
+    else if(mq.addListener) mq.addListener(ouvir);
+  }
 }
 
 function setupBackup(){
@@ -1991,6 +2097,7 @@ function setupTabs(){
   setupTabs();
   setupVersionBadge();
   setupBackup();
+  setupTheme();
 })();
 </script>
 </body>
