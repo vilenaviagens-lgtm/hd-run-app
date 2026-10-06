@@ -597,6 +597,69 @@
     color:var(--track-light);
     line-height:1.45;
   }
+  .backup{
+    margin:34px 0 0;
+    padding:12px 14px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:8px;
+  }
+  .backup > summary{
+    font-size:12.5px;
+    color:var(--ink-dim);
+    cursor:pointer;
+  }
+  .backup-note{
+    font-size:11.5px;
+    color:var(--ink-faint);
+    line-height:1.5;
+    margin:10px 0;
+  }
+  .backup-count{
+    font-family:var(--font-mono);
+    font-size:11.5px;
+    color:var(--track-light);
+    margin-bottom:10px;
+  }
+  .backup-actions{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:10px;
+  }
+  .backup button{
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    color:var(--ink);
+    border-radius:6px;
+    font-family:var(--font-head);
+    font-size:12px;
+    padding:8px 12px;
+    cursor:pointer;
+  }
+  .backup button:active{
+    border-color:var(--track-light);
+  }
+  .backup textarea{
+    width:100%;
+    min-height:70px;
+    background:var(--bg);
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--ink-dim);
+    font-family:var(--font-mono);
+    font-size:11px;
+    padding:8px;
+    resize:vertical;
+  }
+  .backup-msg{
+    font-size:11.5px;
+    color:var(--moss);
+    margin-top:8px;
+    line-height:1.4;
+  }
+  .backup-msg:empty{ display:none; }
+  .backup-msg.erro{ color:var(--track-light); }
   .app-version{
     display:block;
     margin:30px auto 0;
@@ -852,12 +915,26 @@
       <div id="gymHistory"></div>
     </div>
   </div>
+  <details class="backup" id="backupBox">
+    <summary>Backup e transferência de dados</summary>
+    <div class="backup-count" id="backupCount"></div>
+    <p class="backup-note">Seus treinos ficam salvos só neste aparelho, nunca em um servidor. Para ver no computador, ou ao trocar de celular: copie o backup aqui e cole no outro aparelho.</p>
+    <div class="backup-actions">
+      <button type="button" id="backupCopy">Copiar meus dados</button>
+      <button type="button" id="backupShow">Mostrar o texto</button>
+    </div>
+    <textarea id="backupText" placeholder="Cole aqui o backup vindo do outro aparelho"></textarea>
+    <div class="backup-actions" style="margin-top:8px;">
+      <button type="button" id="backupRestore">Restaurar deste texto</button>
+    </div>
+    <div class="backup-msg" id="backupMsg"></div>
+  </details>
   <button type="button" class="app-version" id="appVersion"></button>
 </div>
 
 
 <script>
-const APP_VERSION = "ela-2026-09-30.3";
+const APP_VERSION = "ela-2026-10-06.1";
 
 // The whole app is one HTML file, so a phone that cached it keeps showing an old
 // build forever. Compare the published version with this one and switch to it.
@@ -888,6 +965,87 @@ async function checkForUpdate(force){
   }catch(e){
     if(badge) badge.textContent = "versão " + APP_VERSION + " · toque para atualizar";
   }
+}
+
+// Os dados vivem no localStorage, que é por aparelho: estas funções deixam
+// levar o histórico de um aparelho para outro sem servidor nenhum.
+const BACKUP_KEYS = ["running_log_v1_ela", "gym_weights_v1_ela", "gym_sessions_v1_ela", "gym_next_id_v1_ela", "gym_history_v1_ela"];
+const BACKUP_SNAPSHOT = "backup_anterior_ela";
+
+function collectBackup(){
+  const data = {};
+  BACKUP_KEYS.forEach(k=>{
+    const v = localStorage.getItem(k);
+    if(v !== null) data[k] = v;
+  });
+  return JSON.stringify({ app:"treino", version:APP_VERSION, exportedAt:new Date().toISOString(), data:data });
+}
+
+function backupMsg(text, erro){
+  const el = document.getElementById("backupMsg");
+  if(!el) return;
+  el.textContent = text;
+  el.classList.toggle("erro", !!erro);
+}
+
+function renderBackupCount(){
+  const el = document.getElementById("backupCount");
+  if(!el) return;
+  const treinos = GYM_SESSIONS.length;
+  const corridas = PLAN.filter(s => LOG[s.id] && LOG[s.id].done).length;
+  el.textContent = treinos + " treino" + (treinos===1?"":"s") + " de academia e " + corridas + " corrida" + (corridas===1?"":"s") + " guardados neste aparelho";
+}
+
+function setupBackup(){
+  const box = document.getElementById("backupBox");
+  if(!box) return;
+  const area = document.getElementById("backupText");
+  renderBackupCount();
+  box.addEventListener("toggle", ()=>{ if(box.open) renderBackupCount(); });
+
+  document.getElementById("backupCopy").addEventListener("click", async ()=>{
+    const txt = collectBackup();
+    try{
+      await navigator.clipboard.writeText(txt);
+      backupMsg("Backup copiado. Cole no outro aparelho e toque em Restaurar.");
+    }catch(e){
+      area.value = txt;
+      area.select();
+      backupMsg("Não consegui copiar sozinho — o texto está aí embaixo, copie manualmente.", true);
+    }
+  });
+
+  document.getElementById("backupShow").addEventListener("click", ()=>{
+    area.value = collectBackup();
+    area.select();
+    backupMsg("Esse é o seu backup. Copie tudo e guarde onde quiser.");
+  });
+
+  document.getElementById("backupRestore").addEventListener("click", ()=>{
+    const raw = (area.value||"").trim();
+    if(!raw) return backupMsg("Cole primeiro o texto do backup do outro aparelho.", true);
+
+    let parsed;
+    try{ parsed = JSON.parse(raw); }
+    catch(e){ return backupMsg("Esse texto não é um backup válido.", true); }
+
+    const data = parsed && parsed.data;
+    if(!data || typeof data !== "object") return backupMsg("Esse texto não é um backup válido.", true);
+
+    const keys = Object.keys(data).filter(k => BACKUP_KEYS.indexOf(k) !== -1 && typeof data[k] === "string");
+    if(!keys.length) return backupMsg("Esse backup não tem dados deste app — confira se não é o backup do outro app.", true);
+
+    if(!confirm("Isto substitui os dados deste aparelho pelos do backup. Os dados atuais ficam guardados numa cópia de segurança. Continuar?")) return;
+
+    try{ localStorage.setItem(BACKUP_SNAPSHOT, collectBackup()); }catch(e){}
+    try{
+      keys.forEach(k => localStorage.setItem(k, data[k]));
+    }catch(e){
+      return backupMsg("Não consegui salvar os dados neste navegador.", true);
+    }
+    backupMsg("Restaurado. Recarregando o app…");
+    setTimeout(()=> location.reload(), 800);
+  });
 }
 
 function setupVersionBadge(){
@@ -1838,6 +1996,7 @@ function setupTabs(){
   renderGymAll();
   setupTabs();
   setupVersionBadge();
+  setupBackup();
 })();
 </script>
 </body>
