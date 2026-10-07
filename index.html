@@ -71,6 +71,99 @@
       color:color-mix(in srgb, var(--gym-color, var(--track)) 75%, #000);
     }
   }
+  .pr-input{
+    width:82px;
+    background:var(--bg);
+    border:1px solid var(--track-light);
+    border-radius:5px;
+    color:var(--ink);
+    font-family:var(--font-mono);
+    font-size:17px;
+    padding:1px 5px;
+  }
+  .pr-edit{
+    background:none;
+    border:none;
+    padding:0;
+    font-family:var(--font-mono);
+    font-size:17px;
+    color:var(--track-light);
+    cursor:pointer;
+    border-bottom:1px dashed var(--ink-faint);
+  }
+  .pr-alert{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    flex-wrap:wrap;
+    margin-top:10px;
+    padding:9px 12px;
+    background:var(--moss-dim);
+    border:1px solid var(--moss);
+    border-radius:7px;
+    font-size:11.5px;
+    color:var(--moss);
+  }
+  .pr-alert:empty{ display:none; }
+  .pr-alert button{
+    background:transparent;
+    border:1px solid var(--moss);
+    color:var(--moss);
+    border-radius:5px;
+    font-family:var(--font-head);
+    font-size:11.5px;
+    padding:5px 11px;
+    cursor:pointer;
+  }
+  .bloco{
+    margin-top:26px;
+    padding:13px 15px;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:8px;
+  }
+  .bloco h3{
+    margin:0 0 4px;
+    font-size:14px;
+    font-weight:600;
+  }
+  .bloco-sub{
+    font-size:11.5px;
+    color:var(--ink-dim);
+    line-height:1.5;
+    margin-bottom:10px;
+  }
+  .bloco-btn{
+    background:var(--track);
+    border:none;
+    color:var(--on-track);
+    border-radius:6px;
+    font-family:var(--font-head);
+    font-size:12.5px;
+    font-weight:600;
+    padding:9px 14px;
+    cursor:pointer;
+  }
+  .bloco-btn[disabled]{
+    background:var(--surface-2);
+    color:var(--ink-faint);
+    cursor:default;
+  }
+  .bloco-lista{
+    margin-top:12px;
+    border-top:1px solid var(--line);
+    padding-top:10px;
+  }
+  .bloco-item{
+    display:flex;
+    justify-content:space-between;
+    gap:10px;
+    font-family:var(--font-mono);
+    font-size:11px;
+    color:var(--ink-faint);
+    padding:3px 0;
+  }
   .backup-alert{
     display:flex;
     align-items:center;
@@ -753,6 +846,51 @@
     margin-top:4px;
     line-height:1.4;
   }
+  .ex-trocar{
+    background:none;
+    border:none;
+    color:var(--ink-faint);
+    font-family:var(--font-head);
+    font-size:10.5px;
+    text-decoration:underline;
+    padding:2px 0;
+    cursor:pointer;
+  }
+  .ex-trocado{
+    font-size:10px;
+    color:var(--amber);
+    margin-top:2px;
+  }
+  .ex-opcoes{
+    display:none;
+    margin:8px 0 2px;
+    padding:9px 11px;
+    background:var(--surface-2);
+    border:1px solid var(--line);
+    border-radius:7px;
+  }
+  .ex-opcoes.open{ display:block; }
+  .ex-opcoes-titulo{
+    font-size:10.5px;
+    color:var(--ink-faint);
+    margin-bottom:7px;
+  }
+  .ex-opcao{
+    display:block;
+    width:100%;
+    text-align:left;
+    background:var(--surface);
+    border:1px solid var(--line);
+    border-radius:6px;
+    color:var(--ink);
+    font-family:var(--font-head);
+    font-size:12.5px;
+    padding:8px 10px;
+    margin-bottom:6px;
+    cursor:pointer;
+  }
+  .ex-opcao:last-child{ margin-bottom:0; }
+  .ex-opcao:active{ border-color:var(--track-light); }
   .ex-chart{
     margin:10px 0 0;
   }
@@ -1057,28 +1195,8 @@
         <p class="sub">6 semanas · terça, quinta e sábado</p>
       </div>
     </div>
-    <div class="pr-strip">
-      <div class="pr-item">
-        <div class="pr-label">5km base</div>
-        <div class="pr-value">23:00</div>
-        <div class="pr-pace">4:36 /km</div>
-      </div>
-      <div class="pr-item">
-        <div class="pr-label">10km base</div>
-        <div class="pr-value">48:28</div>
-        <div class="pr-pace">4:51 /km</div>
-      </div>
-      <div class="pr-item">
-        <div class="pr-label">Faixa fácil</div>
-        <div class="pr-value">5:45–6:15</div>
-        <div class="pr-pace">/km</div>
-      </div>
-      <div class="pr-item">
-        <div class="pr-label">Faixa limiar</div>
-        <div class="pr-value">4:55–5:10</div>
-        <div class="pr-pace">/km</div>
-      </div>
-    </div>
+    <div class="pr-strip" id="prStrip"></div>
+    <div class="pr-alert" id="prAlert"></div>
   </header>
 
   <div class="backup-alert" id="backupAlert"></div>
@@ -1115,6 +1233,7 @@
       <div class="trend-title">Pace por treino concluído (min/km, ordem cronológica)</div>
       <div id="trendWrap"></div>
     </div>
+    <div class="bloco" id="blocoBox"></div>
   </div>
   </div>
 
@@ -1160,7 +1279,7 @@
 
 
 <script>
-const APP_VERSION = "2026-10-06.3";
+const APP_VERSION = "2026-10-07.1";
 
 // The whole app is one HTML file, so a phone that cached it keeps showing an old
 // build forever. Compare the published version with this one and switch to it.
@@ -1195,7 +1314,7 @@ async function checkForUpdate(force){
 
 // Os dados vivem no localStorage, que é por aparelho: estas funções deixam
 // levar o histórico de um aparelho para outro sem servidor nenhum.
-const BACKUP_KEYS = ["running_log_v1", "gym_weights_v1", "gym_sessions_v1", "gym_next_id_v1", "gym_history_v1", "gym_notes_v1"];
+const BACKUP_KEYS = ["running_log_v1", "gym_weights_v1", "gym_sessions_v1", "gym_next_id_v1", "gym_history_v1", "gym_notes_v1", "pr_marks_v1", "bloco_v1", "blocos_v1", "ex_subs_v1"];
 const BACKUP_SNAPSHOT = "backup_anterior";
 
 function collectBackup(){
@@ -1419,7 +1538,7 @@ const TYPE_STYLE = {
   "Longão progressivo": {color:"#7C9A5A", bg:"#293620", fg:"#9FBF7D"}
 };
 
-const PLAN = [
+const PLANO_INICIAL = [
   {w:1,day:"Terça",type:"Intervalado",desc:"Aquecimento 10-15min fácil + 6x400m forte (1:45-1:50) com 90s trote entre + volta à calma 10min.",target:"4:15–4:25 /km (tiros)"},
   {w:1,day:"Quinta",type:"Limiar",desc:"Aquecimento 10min + 15min contínuos a 4:55-5:10/km + volta à calma 10min.",target:"4:55–5:10 /km"},
   {w:1,day:"Sábado",type:"Longão fácil",desc:"6km em ritmo confortável (5:45-6:15/km).",target:"5:45–6:15 /km"},
@@ -1439,7 +1558,86 @@ const PLAN = [
   {w:6,day:"Quinta",type:"Limiar",desc:"Aquecimento 10min + 25-30min contínuos a 4:55-5:10/km + volta à calma 10min.",target:"4:55–5:10 /km"},
   {w:6,day:"Sábado",type:"Longão progressivo",desc:"8km, últimos 2-3km mais rápido que o ritmo confortável.",target:"5:45–6:15 /km (final mais rápido)"}
 ];
-PLAN.forEach((s,i)=> s.id = "s"+i);
+const PERFIL_CORRIDA = "avancado";
+
+// Marcas do topo: ficavam fixas no HTML. Agora são dados, e as faixas de
+// treino saem da marca de 5km em vez de números escritos à mão.
+const PR_PADRAO = { k5:"23:00", k10:"48:28" };
+let PR_MARKS = Object.assign({}, PR_PADRAO);
+
+const ZONAS = { tiros:[0.93,0.97], limiar:[1.06,1.11], firme:[1.12,1.18], facil:[1.22,1.32] };
+
+function mmssParaSeg(txt){
+  const m = String(txt||"").trim().match(/^(\d{1,3}):([0-5]\d)$/);
+  return m ? (parseInt(m[1],10)*60 + parseInt(m[2],10)) : null;
+}
+
+function segParaMMSS(sec){
+  const s = Math.max(0, Math.round(sec));
+  return Math.floor(s/60) + ":" + String(s%60).padStart(2,"0");
+}
+
+function paceBase(){
+  const t = mmssParaSeg(PR_MARKS.k5);
+  return t ? (t/5) : 300;
+}
+
+function faixaTexto(zona){
+  const b = paceBase(), z = ZONAS[zona];
+  return segParaMMSS(b*z[0]) + "–" + segParaMMSS(b*z[1]);
+}
+
+// Blocos de 6 semanas: o primeiro é o plano escrito à mão; os seguintes saem
+// daqui, com os ritmos recalculados a partir da marca atual.
+let BLOCO = { numero:1, inicio:null, base:null, kmInicial:null };
+let BLOCOS = [];
+let PLAN = PLANO_INICIAL;
+
+function gerarPlano(kmInicial){
+  const km = [kmInicial, kmInicial+1, kmInicial+2, kmInicial, kmInicial+3, kmInicial+4];
+  const tiros = faixaTexto("tiros"), limiar = faixaTexto("limiar"), firme = faixaTexto("firme"), facil = faixaTexto("facil");
+  const avancado = PERFIL_CORRIDA === "avancado";
+  const plano = [];
+
+  for(let w=1; w<=6; w++){
+    const leve = (w === 4), ultima = (w === 6);
+    const nTiros = leve ? 4 : (avancado ? (4 + w) : (5 + Math.floor(w/2)));
+    plano.push({
+      w:w, day:"Terça", type:"Intervalado",
+      desc: "Aquecimento 10min fácil + " + nTiros + (avancado
+        ? ("x400m a " + tiros + "/km com 90s de trote entre")
+        : ("x (1min a " + tiros + "/km / 2min de trote)"))
+        + " + volta à calma 10min." + (leve ? " Semana mais leve." : ""),
+      target: tiros + " /km (tiros)"
+    });
+
+    const minutos = leve ? 15 : (avancado ? (15 + w*2) : (20 + w*2));
+    const usaLimiar = avancado || w >= 4;
+    plano.push({
+      w:w, day:"Quinta", type: usaLimiar ? "Limiar" : "Contínuo",
+      desc: usaLimiar
+        ? ("Aquecimento 10min + " + minutos + "min contínuos a " + limiar + "/km + volta à calma 10min.")
+        : (minutos + "min contínuos a " + firme + "/km, firme mas sem ofegar."),
+      target: (usaLimiar ? limiar : firme) + " /km"
+    });
+
+    plano.push({
+      w:w, day:"Sábado", type: ultima ? "Longão progressivo" : "Longão fácil",
+      desc: ultima
+        ? (km[w-1] + "km, terminando os últimos 2km mais rápido que o ritmo confortável.")
+        : (km[w-1] + "km a " + facil + "/km." + (leve ? " Semana de alívio antes do salto final." : "")),
+      target: facil + " /km" + (ultima ? " (final mais rápido)" : "")
+    });
+  }
+  return plano;
+}
+
+function aplicarBloco(){
+  PLAN = (BLOCO.numero <= 1) ? PLANO_INICIAL : gerarPlano(BLOCO.kmInicial || 6);
+  PLAN.forEach((s,i)=> s.id = "s"+i);
+}
+
+aplicarBloco();
 
 let LOG = {};
 
@@ -1556,9 +1754,27 @@ async function loadLog(){
     if(raw){
       LOG = JSON.parse(raw);
     }
+    const marcas = localStorage.getItem("pr_marks_v1");
+    if(marcas) PR_MARKS = Object.assign({}, PR_PADRAO, JSON.parse(marcas));
+    const bloco = localStorage.getItem("bloco_v1");
+    if(bloco) BLOCO = Object.assign({}, BLOCO, JSON.parse(bloco));
+    const antigos = localStorage.getItem("blocos_v1");
+    if(antigos) BLOCOS = JSON.parse(antigos);
   }catch(e){
     storageOK = false;
   }
+  aplicarBloco();
+}
+
+function savePR(){
+  try{ localStorage.setItem("pr_marks_v1", JSON.stringify(PR_MARKS)); }catch(e){}
+}
+
+function saveBlocos(){
+  try{
+    localStorage.setItem("bloco_v1", JSON.stringify(BLOCO));
+    localStorage.setItem("blocos_v1", JSON.stringify(BLOCOS));
+  }catch(e){}
 }
 
 async function saveLog(){
@@ -1582,6 +1798,185 @@ function renderWeekTabs(){
     el.appendChild(btn);
   }
   document.getElementById("weekHeading").textContent = "Semana " + currentWeek;
+}
+
+function renderPRStrip(){
+  const el = document.getElementById("prStrip");
+  if(!el) return;
+  const b = paceBase();
+  const campo = (rotulo, chave) => {
+    const valor = PR_MARKS[chave];
+    const pace = mmssParaSeg(valor);
+    const dist = chave === "k5" ? 5 : 10;
+    return `<div class="pr-item">
+        <div class="pr-label">${rotulo}</div>
+        <div class="pr-value"><button type="button" class="pr-edit" data-role="editpr" data-campo="${chave}" title="Tocar para editar">${valor || "—"}</button></div>
+        <div class="pr-pace">${pace ? (segParaMMSS(pace/dist) + " /km") : "sem marca"}</div>
+      </div>`;
+  };
+  el.innerHTML =
+    campo("5km base", "k5") +
+    campo("10km base", "k10") +
+    `<div class="pr-item">
+        <div class="pr-label">Faixa fácil</div>
+        <div class="pr-value">${faixaTexto("facil")}</div>
+        <div class="pr-pace">/km</div>
+      </div>
+      <div class="pr-item">
+        <div class="pr-label">Faixa limiar</div>
+        <div class="pr-value">${faixaTexto("limiar")}</div>
+        <div class="pr-pace">/km</div>
+      </div>`;
+
+  el.querySelectorAll('[data-role="editpr"]').forEach(btn=>{
+    btn.addEventListener("click", ()=> editarMarca(btn));
+  });
+}
+
+function editarMarca(btn){
+  const chave = btn.getAttribute("data-campo");
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "pr-input";
+  input.inputMode = "numeric";
+  input.placeholder = "mm:ss";
+  input.value = PR_MARKS[chave] || "";
+  btn.replaceWith(input);
+  input.focus();
+  input.select();
+
+  let fechado = false;
+  const concluir = salvar => {
+    if(fechado) return;
+    fechado = true;
+    if(salvar){
+      const txt = input.value.trim();
+      if(txt === "" || mmssParaSeg(txt) !== null){
+        PR_MARKS[chave] = txt;
+        savePR();
+      }
+    }
+    renderPRStrip();
+    renderSessions();      // as faixas aparecem nos cartões de treino
+    renderBlocoBox();
+  };
+
+  input.addEventListener("blur", ()=> concluir(true));
+  input.addEventListener("keydown", e=>{
+    if(e.key === "Enter"){ e.preventDefault(); concluir(true); }
+    if(e.key === "Escape"){ concluir(false); }
+  });
+}
+
+// Depois de salvar uma corrida, compara com a marca guardada e oferece atualizar.
+function verificarRecorde(distStr, timeStr){
+  const el = document.getElementById("prAlert");
+  if(!el) return;
+  const dist = parseFloat(String(distStr).replace(",", "."));
+  const pace = paceFromTime(dist, timeStr);
+  if(!pace) return;
+
+  let chave = null, dRef = 0;
+  if(dist >= 4.5 && dist <= 5.5){ chave = "k5"; dRef = 5; }
+  else if(dist >= 9 && dist <= 11){ chave = "k10"; dRef = 10; }
+  if(!chave) return;
+
+  const estimado = Math.round(pace.sec * dRef);
+  const atual = mmssParaSeg(PR_MARKS[chave]);
+  if(atual !== null && estimado >= atual) return;
+
+  el.innerHTML = "";
+  const txt = document.createElement("span");
+  txt.textContent = (atual === null ? "Primeira marca nos " : "Novo recorde nos ") + dRef + "km: " + segParaMMSS(estimado) +
+    " (" + segParaMMSS(pace.sec) + "/km). Atualizar o topo?";
+  const sim = document.createElement("button");
+  sim.type = "button";
+  sim.textContent = "Atualizar";
+  sim.addEventListener("click", ()=>{
+    PR_MARKS[chave] = segParaMMSS(estimado);
+    savePR();
+    el.innerHTML = "";
+    renderPRStrip();
+    renderSessions();
+    renderBlocoBox();
+  });
+  const nao = document.createElement("button");
+  nao.type = "button";
+  nao.textContent = "Agora não";
+  nao.addEventListener("click", ()=>{ el.innerHTML = ""; });
+  const acoes = document.createElement("span");
+  acoes.style.display = "flex";
+  acoes.style.gap = "8px";
+  acoes.appendChild(sim); acoes.appendChild(nao);
+  el.appendChild(txt); el.appendChild(acoes);
+}
+
+// ---------- blocos de 6 semanas ----------
+function resumoDoBloco(){
+  const feitas = PLAN.filter(s => LOG[s.id] && LOG[s.id].done);
+  const km = feitas.reduce((t,s)=> t + (parseFloat(String(LOG[s.id].distance||"").replace(",", ".")) || 0), 0);
+  const paces = feitas.map(s => paceFromTime(parseFloat(String(LOG[s.id].distance||"").replace(",", ".")), LOG[s.id].time)).filter(Boolean);
+  const paceMedio = paces.length ? (paces.reduce((t,p)=> t + p.sec, 0) / paces.length) : null;
+  const maiorKm = feitas.reduce((m,s)=> Math.max(m, parseFloat(String(LOG[s.id].distance||"").replace(",", ".")) || 0), 0);
+  return { feitas: feitas.length, total: PLAN.length, km: km, paceMedio: paceMedio, maiorKm: maiorKm };
+}
+
+function renderBlocoBox(){
+  const el = document.getElementById("blocoBox");
+  if(!el) return;
+  const r = resumoDoBloco();
+  const completo = r.feitas >= r.total;
+
+  const anteriores = BLOCOS.length ? `<div class="bloco-lista">${BLOCOS.map(b=>
+      `<div class="bloco-item"><span>Bloco ${b.numero}</span><span>${b.feitas}/${b.total} · ${b.km.toFixed(1)} km${b.paceMedio ? (" · " + segParaMMSS(b.paceMedio) + "/km") : ""}</span></div>`
+    ).join("")}</div>` : "";
+
+  el.innerHTML = `
+    <h3>Bloco ${BLOCO.numero}${completo ? " · concluído" : ""}</h3>
+    <div class="bloco-sub">${r.feitas} de ${r.total} sessões · ${r.km.toFixed(1)} km${r.paceMedio ? (" · pace médio " + segParaMMSS(r.paceMedio) + "/km") : ""}.
+      ${completo
+        ? "Bloco fechado. Comece o próximo para seguir com ritmos recalculados pela sua marca atual."
+        : "Ao fechar, o próximo bloco nasce com os ritmos recalculados pela sua marca de 5km."}
+    </div>
+    <button type="button" class="bloco-btn" data-role="novobloco">Começar novo bloco</button>
+    ${anteriores}`;
+
+  const btn = el.querySelector('[data-role="novobloco"]');
+  if(btn) btn.addEventListener("click", comecarNovoBloco);
+}
+
+function comecarNovoBloco(){
+  const r = resumoDoBloco();
+  const proximoKm = Math.max(6, Math.round(r.maiorKm || 0) || (BLOCO.kmInicial || 6));
+  const texto = "Arquivar o bloco " + BLOCO.numero + " (" + r.feitas + " sessões, " + r.km.toFixed(1) + " km) e começar um novo de 6 semanas?" +
+    "\n\nOs ritmos vêm da sua marca de 5km (" + segParaMMSS(paceBase()) + "/km) e o longão começa em " + proximoKm + "km." +
+    "\nO histórico de corrida deste bloco sai da lista (o resumo fica guardado). A academia não é afetada.";
+  if(!confirm(texto)) return;
+
+  BLOCOS.push({
+    numero: BLOCO.numero,
+    feitas: r.feitas,
+    total: r.total,
+    km: r.km,
+    paceMedio: r.paceMedio,
+    fim: new Date().toISOString()
+  });
+  BLOCO = {
+    numero: BLOCO.numero + 1,
+    inicio: new Date().toISOString(),
+    base: paceBase(),
+    kmInicial: proximoKm
+  };
+  LOG = {};
+  saveLog();
+  saveBlocos();
+  aplicarBloco();
+  currentWeek = 1;
+  renderAll();
+  renderPRStrip();
+  renderBlocoBox();
+  const alerta = document.getElementById("prAlert");
+  if(alerta) alerta.innerHTML = "";
 }
 
 function renderSessions(){
@@ -1657,10 +2052,12 @@ function renderSessions(){
         // kept so the gym tab knows how fresh the last run is
         doneAt: doneInput.checked ? ((wasDone && LOG[s.id].doneAt) || new Date().toISOString()) : null
       };
+      if(doneInput.checked) verificarRecorde(distInput.value, timeInput.value);
       const p = paceFromTime(parseFloat(distInput.value), timeInput.value);
       paceInput.value = p ? p.label : "—";
       card.classList.toggle("is-done", doneInput.checked);
       saveLog();
+      renderBlocoBox();
       if(!storageOK){
         noteEl.textContent = "Não foi possível salvar agora.";
       }else{
@@ -1827,6 +2224,8 @@ async function loadGym(){
     if(h) GYM_HISTORY = JSON.parse(h);
     const no = localStorage.getItem("gym_notes_v1");
     if(no) GYM_NOTES = JSON.parse(no);
+    const subs = localStorage.getItem("ex_subs_v1");
+    if(subs) EX_SUBS = JSON.parse(subs);
     GYM_UNDO = localStorage.getItem("gym_undo_v1");
   }catch(e){ /* ignore, start fresh */ }
 }
@@ -1922,6 +2321,109 @@ function getExEntry(key, setsCount){
   if(typeof raw.done !== "boolean") raw.done = false;
   GYM_WEIGHTS[key] = raw;
   return raw;
+}
+
+const ALTERNATIVAS = {
+  "Peito":[
+    {id:"supinoHalt", name:"Supino reto com halteres", inc:2, how:"Escápulas encaixadas no banco, halteres na linha do peito. Desça até sentir alongar e suba sem bater um halter no outro."},
+    {id:"supinoIncl", name:"Supino inclinado com halteres", inc:2, how:"Banco a 30-45°. Desça até a linha do peito alto e suba sem travar os cotovelos."},
+    {id:"peckDeck", name:"Crucifixo peck deck", inc:2.5, how:"Costas apoiadas, cotovelos na altura do peito. Feche os braços à frente, segure meio segundo e volte controlando."},
+    {id:"supinoMaq", name:"Supino máquina", inc:2.5, how:"Manoplas na linha do peito, costas apoiadas. Empurre até quase estender e volte controlando."},
+    {id:"flexao", name:"Flexão de braço", inc:null, how:"Mãos pouco além da largura dos ombros, corpo alinhado. Desça até o peito quase tocar o chão e suba sem deixar o quadril cair."}
+  ],
+  "Costas":[
+    {id:"puxFrontal", name:"Puxada frontal (pulley)", inc:2.5, how:"Pegada pouco mais aberta que os ombros. Puxe até a altura do queixo levando o peito à frente."},
+    {id:"puxSupinada", name:"Puxada supinada", inc:2.5, how:"Pegada supinada na largura dos ombros. Puxe até a parte alta do peito com os cotovelos para baixo e para trás."},
+    {id:"remBaixa", name:"Remada baixa (triângulo)", inc:2.5, how:"Coluna neutra. Puxe até a barriga aproximando as escápulas, sem jogar o tronco para trás."},
+    {id:"remMaquina", name:"Remada máquina", inc:2.5, how:"Peito apoiado. Puxe aproximando as escápulas e volte alongando as costas sem soltar o peso."},
+    {id:"serrote", name:"Remada unilateral (serrote)", inc:2, how:"Joelho e mão no banco, coluna paralela ao chão. Puxe o halter ao quadril e desça alongando."}
+  ],
+  "Ombro":[
+    {id:"desenvHalt", name:"Desenvolvimento com halteres", inc:2, how:"Encosto quase vertical. Suba até quase estender e desça até a altura das orelhas."},
+    {id:"desenvMaq", name:"Desenvolvimento máquina", inc:2.5, how:"Costas apoiadas, manoplas na altura dos ombros. Empurre para cima sem travar os cotovelos."},
+    {id:"elevLateral", name:"Elevação lateral", inc:1, how:"Cotovelos levemente flexionados. Suba até a altura dos ombros conduzindo pelos cotovelos e desça devagar."},
+    {id:"elevCabo", name:"Elevação lateral no cabo", inc:1, how:"Cabo na polia baixa, passando pela frente do corpo. Suba até a altura do ombro e controle a volta."},
+    {id:"crucInv", name:"Crucifixo invertido", inc:1, how:"Tronco inclinado ou peck deck invertido. Abra os braços apertando a parte de trás dos ombros."}
+  ],
+  "Tríceps":[
+    {id:"triCorda", name:"Tríceps corda", inc:1, how:"Cotovelos colados ao tronco. Estenda abrindo a corda no final e volte controlando."},
+    {id:"triTesta", name:"Tríceps testa", inc:1, how:"Cotovelos apontados para cima e parados. Desça até perto da testa e estenda sem abrir os cotovelos."},
+    {id:"triFrances", name:"Tríceps francês", inc:1, how:"Halter acima da cabeça, cotovelos fixos. Desça atrás da cabeça e estenda."},
+    {id:"mergulho", name:"Mergulho no banco", inc:null, how:"Mãos no banco atrás do corpo. Desça flexionando os cotovelos até 90° e suba empurrando."}
+  ],
+  "Bíceps":[
+    {id:"roscaDireta", name:"Rosca direta", inc:1, how:"Cotovelos fixos ao lado do corpo. Suba sem balançar o tronco e desça até quase estender."},
+    {id:"roscaMartelo", name:"Rosca martelo", inc:1, how:"Pegada neutra, polegares para cima. Suba sem girar o punho."},
+    {id:"roscaAlt", name:"Rosca alternada", inc:1, how:"Um braço de cada vez, girando o punho durante a subida. Desça controlando antes de trocar."},
+    {id:"roscaScott", name:"Rosca scott", inc:1, how:"Braços apoiados no banco inclinado. Suba sem tirar os cotovelos do apoio e desça sem estender por completo."}
+  ],
+  "Quadríceps":[
+    {id:"agachLivre", name:"Agachamento livre", inc:2.5, how:"Pés na largura dos ombros. Desça até a coxa paralela ao chão com o peito aberto e suba empurrando o chão."},
+    {id:"legPress", name:"Leg press", inc:5, how:"Desça até 90° no joelho sem tirar o quadril do banco e empurre sem travar."},
+    {id:"goblet", name:"Agachamento goblet", inc:2, how:"Halter junto ao peito. Desça entre os joelhos com o tronco ereto."},
+    {id:"extensora", name:"Cadeira extensora", inc:2.5, how:"Estenda até quase travar, segure meio segundo e desça controlando."},
+    {id:"afundo", name:"Afundo com halteres", inc:2, how:"Passo à frente firme, tronco ereto. Suba empurrando com o calcanhar da perna da frente."}
+  ],
+  "Posterior":[
+    {id:"terraRomeno", name:"Levantamento terra romeno", inc:2.5, how:"Joelhos levemente flexionados, barra rente às pernas. Quadril para trás até alongar e suba contraindo o glúteo."},
+    {id:"mesaFlexora", name:"Mesa flexora (deitada)", inc:2.5, how:"Rolo logo acima dos calcanhares. Flexione levando o calcanhar ao glúteo sem tirar o quadril do banco."},
+    {id:"cadeiraFlexora", name:"Cadeira flexora", inc:2.5, how:"Sentado, flexione os joelhos o máximo possível e controle a volta."},
+    {id:"stiffHalt", name:"Stiff com halteres", inc:2, how:"Halteres rente às pernas, leve flexão de joelho. Desça empurrando o quadril para trás."}
+  ],
+  "Glúteo":[
+    {id:"hipThrust", name:"Hip thrust", inc:5, how:"Costas no banco na linha das escápulas, queixo para baixo. Suba até o tronco paralelo ao chão."},
+    {id:"elevPelvica", name:"Elevação pélvica no solo", inc:5, how:"Costas no chão, pés próximos ao quadril. Suba contraindo o glúteo e desça sem encostar."},
+    {id:"abducao", name:"Abdução de quadril (máquina)", inc:2.5, how:"Coluna apoiada. Abra as pernas até o limite confortável e feche devagar."},
+    {id:"coice", name:"Coice no cabo", inc:2.5, how:"Tornozeleira no cabo, tronco levemente à frente. Leve a perna para trás sem arquear a lombar."}
+  ],
+  "Panturrilha":[
+    {id:"pantEmPe", name:"Panturrilha em pé", inc:2.5, how:"Suba na ponta dos pés o máximo possível, pausa no topo e desça alongando."},
+    {id:"pantSentado", name:"Panturrilha sentada", inc:2.5, how:"Joelhos a 90° com o apoio sobre as coxas. Suba na ponta dos pés e desça alongando."},
+    {id:"pantLeg", name:"Panturrilha no leg press", inc:5, how:"Pés na borda da plataforma. Empurre com a ponta dos pés sem dobrar o joelho."}
+  ],
+  "Core":[
+    {id:"prancha", name:"Prancha", inc:null, how:"Antebraços e pontas dos pés, corpo alinhado. Contraia o abdômen e não deixe o quadril cair."},
+    {id:"abdPolia", name:"Abdominal na polia", inc:2.5, how:"Ajoelhado de costas para a polia. Enrole a coluna usando o abdômen, não os braços."},
+    {id:"elevPernas", name:"Elevação de pernas", inc:null, how:"Deitado, mãos sob o quadril. Suba as pernas sem tirar a lombar do chão."},
+    {id:"pranchaLat", name:"Prancha lateral", inc:null, how:"Apoio em um antebraço, corpo alinhado de lado. Não deixe o quadril descer."}
+  ]
+};
+
+let EX_SUBS = {};
+
+// Um exercício trocado mantém o alvo e o descanso do original (o volume do
+// treino não muda) e ganha chave própria, para o histórico não se misturar.
+function exercicioEfetivo(ex){
+  const altId = EX_SUBS[ex.key];
+  if(!altId) return ex;
+  const lista = ALTERNATIVAS[ex.grupo] || [];
+  const alt = lista.find(a => a.id === altId);
+  if(!alt) return ex;
+  return {
+    key: ex.key + ":" + alt.id,
+    name: alt.name,
+    how: alt.how,
+    inc: alt.inc,
+    target: ex.target,
+    rest: ex.rest,
+    grupo: ex.grupo,
+    originalKey: ex.key,
+    originalName: ex.name
+  };
+}
+
+function alternativasPara(ex){
+  const base = ex.originalKey || ex.key;
+  const original = GYM_PLAN.flatMap(w => w.exercises).find(e => e.key === base);
+  if(!original) return [];
+  return (ALTERNATIVAS[original.grupo] || []).filter(a => a.name !== original.name);
+}
+
+function trocarExercicio(chaveOriginal, altId){
+  if(altId) EX_SUBS[chaveOriginal] = altId;
+  else delete EX_SUBS[chaveOriginal];
+  try{ localStorage.setItem("ex_subs_v1", JSON.stringify(EX_SUBS)); }catch(e){}
+  renderGymAll();
 }
 
 function parseW(str){
@@ -2070,6 +2572,21 @@ function chartHTML(ex){
       </div>`;
 }
 
+function opcoesHTML(ex){
+  const base = ex.originalKey || ex.key;
+  const opcoes = alternativasPara(ex).map(a=>
+    `<button type="button" class="ex-opcao" data-role="escolheralt" data-key="${base}" data-alt="${a.id}">${a.name}</button>`
+  ).join("");
+  const voltar = ex.originalKey
+    ? `<button type="button" class="ex-opcao" data-role="escolheralt" data-key="${base}" data-alt="">Voltar para ${ex.originalName}</button>`
+    : "";
+  return `
+      <div class="ex-opcoes" data-role="opcoes">
+        <div class="ex-opcoes-titulo">Mesma faixa de séries e repetições, mesmo grupo muscular. Cada opção guarda o próprio histórico.</div>
+        ${voltar}${opcoes}
+      </div>`;
+}
+
 function suggestBlockHTML(ex){
   const sug = suggestFromHistory(ex);
   if(!sug.hasHistory){
@@ -2212,12 +2729,15 @@ function exerciseRowHTML(ex){
         <div>
           <div class="ex-name">${ex.name}</div>
           <div class="ex-target">${ex.target}</div>
+          ${ex.originalKey ? `<div class="ex-trocado">no lugar de ${ex.originalName}</div>` : ""}
+          <button type="button" class="ex-trocar" data-role="trocar" data-key="${ex.originalKey || ex.key}">trocar exercício</button>
         </div>
         <label class="ex-done-toggle">
           <input type="checkbox" data-role="exdone" data-key="${ex.key}" ${entry.done ? "checked":""}/>
           Concluído
         </label>
       </div>
+      ${opcoesHTML(ex)}
       ${suggestBlockHTML(ex)}
       ${chartHTML(ex)}
       <div class="sets-table">
@@ -2267,6 +2787,7 @@ function renderGymList(){
     card.style.setProperty("--gym-fg", style.fg);
 
     const isOpen = openGymCard === workout.id;
+    const exercicios = workout.exercises.map(exercicioEfetivo);
 
     card.innerHTML = `
       <div class="gym-card-head" data-role="head">
@@ -2278,7 +2799,7 @@ function renderGymList(){
       </div>
       <div class="gym-body ${isOpen ? "open":""}">
         ${runClashHTML(workout)}
-        ${workout.exercises.map(ex => exerciseRowHTML(ex)).join("")}
+        ${exercicios.map(ex => exerciseRowHTML(ex)).join("")}
         <textarea class="gym-note" data-role="gymnote" placeholder="Como foi o treino? (opcional)">${escapeHTML(GYM_NOTES[workout.id] || "")}</textarea>
         <button type="button" class="gym-log-btn" data-role="logbtn">Registrar treino de hoje</button>
       </div>
@@ -2294,7 +2815,7 @@ function renderGymList(){
         const key = inp.getAttribute("data-key");
         const idx = parseInt(inp.getAttribute("data-idx"), 10);
         const field = inp.getAttribute("data-role") === "setweight" ? "weight" : "reps";
-        const ex = workout.exercises.find(e => e.key === key);
+        const ex = exercicios.find(e => e.key === key);
         const entry = getExEntry(key, parseSetsCount(ex.target));
         entry.sets[idx][field] = inp.value;
         saveGymWeights();
@@ -2305,10 +2826,25 @@ function renderGymList(){
       });
     });
 
+    card.querySelectorAll('[data-role="trocar"]').forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        const row = btn.closest(".exercise-row");
+        const painel = row ? row.querySelector('[data-role="opcoes"]') : null;
+        if(painel) painel.classList.toggle("open");
+      });
+    });
+
+    card.querySelectorAll('[data-role="escolheralt"]').forEach(btn=>{
+      btn.addEventListener("click", ()=>{
+        openGymCard = workout.id;
+        trocarExercicio(btn.getAttribute("data-key"), btn.getAttribute("data-alt"));
+      });
+    });
+
     card.querySelectorAll('[data-role="applysuggest"]').forEach(btn=>{
       btn.addEventListener("click", ()=>{
         const key = btn.getAttribute("data-key");
-        const ex = workout.exercises.find(e => e.key === key);
+        const ex = exercicios.find(e => e.key === key);
         if(!ex) return;
         const value = fmtNum(parseFloat(btn.getAttribute("data-weight")));
         const entry = getExEntry(key, parseSetsCount(ex.target));
@@ -2324,7 +2860,7 @@ function renderGymList(){
     card.querySelectorAll('input[data-role="exdone"]').forEach(cb=>{
       cb.addEventListener("change", ()=>{
         const key = cb.getAttribute("data-key");
-        const ex = workout.exercises.find(e => e.key === key);
+        const ex = exercicios.find(e => e.key === key);
         const entry = getExEntry(key, parseSetsCount(ex.target));
         entry.done = cb.checked;
         saveGymWeights();
@@ -2469,7 +3005,7 @@ function renderGymList(){
         delete GYM_NOTES[workout.id];
         saveGymNotes();
 
-        workout.exercises.forEach(ex=>{
+        exercicios.forEach(ex=>{
           const entry = getExEntry(ex.key, parseSetsCount(ex.target));
           if(sessionStats(entry.sets)){
             const hist = GYM_HISTORY[ex.key] || (GYM_HISTORY[ex.key] = []);
@@ -2483,7 +3019,7 @@ function renderGymList(){
         saveGymHistory();
 
         // with today filed away, leave the next session already loaded with the suggestion
-        workout.exercises.forEach(ex=>{
+        exercicios.forEach(ex=>{
           const entry = getExEntry(ex.key, parseSetsCount(ex.target));
           const sug = suggestFromHistory(ex);
           const weight = (sug.weight !== undefined && sug.weight !== null) ? fmtNum(sug.weight) : "";
@@ -2514,15 +3050,18 @@ function renderGymList(){
 function volumeDaSemana(){
   const inicio = startOfWeek(new Date());
   const total = {};
-  GYM_PLAN.forEach(w => w.exercises.forEach(ex=>{
-    const grupo = ex.grupo;
+  const grupoDe = {};
+  GYM_PLAN.forEach(w => w.exercises.forEach(e=>{ if(e.grupo) grupoDe[e.key] = e.grupo; }));
+  // a chave de um exercício trocado é "original:alternativa"
+  Object.keys(GYM_HISTORY).forEach(chave=>{
+    const grupo = grupoDe[chave.split(":")[0]];
     if(!grupo) return;
-    (GYM_HISTORY[ex.key] || []).forEach(h=>{
+    (GYM_HISTORY[chave] || []).forEach(h=>{
       if(new Date(h.date) < inicio) return;
       const feitas = (h.sets||[]).filter(st => st && st.reps !== "" && st.reps !== undefined && !isNaN(parseInt(st.reps,10))).length;
       if(feitas) total[grupo] = (total[grupo] || 0) + feitas;
     });
-  }));
+  });
   return total;
 }
 
@@ -2588,6 +3127,8 @@ function setupTabs(){
   setupBackup();
   setupTheme();
   renderBackupAlert();
+  renderPRStrip();
+  renderBlocoBox();
 })();
 </script>
 </body>
