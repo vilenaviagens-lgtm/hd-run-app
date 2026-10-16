@@ -1201,11 +1201,11 @@
   <div class="backup-alert" id="backupAlert"></div>
 
   <div class="tabnav">
-    <button class="tab-btn active" data-tab="corrida">Corrida</button>
-    <button class="tab-btn" data-tab="academia">Academia</button>
+    <button class="tab-btn active" data-tab="academia">Academia</button>
+    <button class="tab-btn" data-tab="corrida">Corrida</button>
   </div>
 
-  <div id="tabCorrida">
+  <div id="tabCorrida" style="display:none">
   <div class="lap">
     <div class="lap-track">
       <div class="lap-fill" id="lapFill" style="width:0%"></div>
@@ -1236,7 +1236,7 @@
   </div>
   </div>
 
-  <div id="tabAcademia" style="display:none">
+  <div id="tabAcademia">
     <div class="lap">
       <div class="lap-track">
         <div class="lap-fill" id="gymLapFill" style="width:0%"></div>
@@ -1278,7 +1278,7 @@
 
 
 <script>
-const APP_VERSION = "ela-2026-10-07.1";
+const APP_VERSION = "ela-2026-10-16.1";
 
 // The whole app is one HTML file, so a phone that cached it keeps showing an old
 // build forever. Compare the published version with this one and switch to it.
